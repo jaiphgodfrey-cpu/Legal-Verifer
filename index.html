@@ -397,35 +397,69 @@ function colCenters(pi,paras,i,k){
 function cellBoxes(pi,i,cells){
   pi.cb=pi.cb||{};if(pi.cb[i])return pi.cb[i];
   const r=pi.pos[i];if(!r)return null;
-  const tc=pi.tc,lim=r.e+12,paras=data.pages[cur].paras;let c=r.s;
+  const tc=pi.tc,lim=r.e+12,paras=data.pages[cur].paras,K=cells.length;
   const k0r=tc.map[r.s],k1r=tc.map[Math.min(r.e,tc.map.length-1)];
-  let cc=null,cols=null;
-  const out=cells.map((cell,j)=>{
-    const n=nz(cell);if(!n)return null;
-    /* 1. exact text, in order, inside the row */
+  const med=a=>{a=a.filter(v=>v!==null&&isFinite(v)).sort((x,y)=>x-y);return a.length?a[a.length>>1]:null};
+  const live=[];for(let k=k0r;k<=k1r;k++){const it=tc.items[k];if(it&&it.transform&&(it.str||'').trim())live.push(k)}
+  const lineH=med(live.map(k=>tc.items[k].height||Math.abs(tc.items[k].transform[3])||10))||10;
+  const yOf=k=>tc.items[k].transform[5];
+  const res=new Array(K).fill(null),used=new Set();
+  const mk=(ks,how,why,q,cell)=>{
+    const b=rectOf(pi,ks.map(k=>tc.items[k]));if(!b)return null;
+    b.q=q;b.how=how;b.why=why;b.pdf=ks.map(k=>tc.items[k].str).join(' ').replace(/\s+/g,' ').trim();b.cell=cell;b.ks=ks;return b;
+  };
+  /* pass 1: exact text, in order, inside this row's text span */
+  let c=r.s;
+  cells.forEach((cell,j)=>{
+    const n=nz(cell);if(!n)return;
     const s=tc.norm.indexOf(n,c);
     if(s>=0&&s+n.length-1<=lim){
       c=s+n.length;
-      const k0=tc.map[s],k1=tc.map[Math.min(s+n.length-1,tc.map.length-1)];
-      const b=rectOf(pi,tc.items.slice(k0,k1+1));
-      if(b){b.q=r.q==='exact'?'exact':'approx';return b}
+      const k0=tc.map[s],k1=tc.map[Math.min(s+n.length-1,tc.map.length-1)],ks=[];
+      for(let k=k0;k<=k1;k++)ks.push(k);
+      res[j]={ks,n};
     }
-    /* 2. column + row-band fuzzy match (tolerates extraction typos) */
-    if(!cc){cc=colCenters(pi,paras,i,cells.length);
-      cols=cc.map(()=>[]);
-      for(let k=k0r;k<=k1r;k++){const it=tc.items[k];if(!it||!it.transform||!(it.str||'').trim())continue;
-        const x=it.transform[4]+(it.width||0)/2;let bj=0;
-        cc.forEach((v,q)=>{if(Math.abs(v-x)<Math.abs(cc[bj]-x))bj=q});
-        cols[bj].push(it)}
-      cols.forEach(a=>a.sort((p,q)=>(q.transform[5]-p.transform[5])||(p.transform[4]-q.transform[4])));
-    }
-    const col=cols[j];if(!col||!col.length)return null;
-    let best=0,bk=0,acc='';
-    for(let k=1;k<=Math.min(14,col.length);k++){acc+=nz(col[k-1].str);const q=sim(n,acc);if(q>best+1e-9){best=q;bk=k}}
-    if(best<0.85)return null;
-    const b=rectOf(pi,col.slice(0,bk));if(b)b.q='approx';return b;
   });
-  return pi.cb[i]=out;
+  /* row anchor = median baseline of the exact matches (else first line of the span) */
+  const ex=res.map((x,j)=>x?yOf(x.ks[0]):null);
+  let anchor=med(ex);if(anchor===null&&live.length)anchor=yOf(live[0]);
+  /* geometry check: an exact text hit far from the row's own line is a duplicate elsewhere - reject */
+  res.forEach((x,j)=>{
+    if(!x)return;
+    if(anchor!==null&&Math.abs(yOf(x.ks[0])-anchor)>4*lineH){res[j]=null;return}
+    const q=r.q==='exact'?'exact':'approx';
+    x.ks.forEach(k=>used.add(k));
+    res[j]=mk(x.ks,'exact','text found in order inside row, on the row line',q,cells[j]);
+  });
+  /* pass 2: unmatched cells - column + row-line constrained, text only validates */
+  const cc=colCenters(pi,paras,i,K);
+  const cols=cc.map(()=>[]);
+  live.forEach(k=>{
+    if(used.has(k))return;
+    const it=tc.items[k],x=it.transform[4]+(it.width||0)/2;let bj=0;
+    cc.forEach((v,q)=>{if(Math.abs(v-x)<Math.abs(cc[bj]-x))bj=q});
+    cols[bj].push(k);
+  });
+  cols.forEach(a=>a.sort((p,q)=>(yOf(q)-yOf(p))||(tc.items[p].transform[4]-tc.items[q].transform[4])));
+  cells.forEach((cell,j)=>{
+    if(res[j])return;
+    const n=nz(cell);if(!n)return;
+    if(anchor===null){return}
+    /* candidate cell = contiguous lines in this column, starting on the row line */
+    const col=cols[j];let st=col.findIndex(k=>Math.abs(yOf(k)-anchor)<=2.2*lineH);
+    if(st<0)return;
+    const chain=[col[st]];
+    for(let q=st+1;q<col.length;q++){
+      const dy=yOf(chain[chain.length-1])-yOf(col[q]);
+      if(dy<=1.8*lineH)chain.push(col[q]);else break;
+    }
+    let best=0,bk=0,acc='';
+    for(let k=1;k<=Math.min(14,chain.length);k++){acc+=nz(tc.items[chain[k-1]].str);const q=sim(n,acc);if(q>best+1e-9){best=q;bk=k}}
+    const need=n.length<6?1:0.85;
+    if(best<need)return;
+    res[j]=mk(chain.slice(0,bk),'column-fuzzy','inside this column on the row line; text similarity '+best.toFixed(2),'approx',cell);
+  });
+  return pi.cb[i]=res;
 }
 function drawCell(){
   const ch=$('#ch');ch.style.display='none';
@@ -438,7 +472,14 @@ function drawCell(){
   const pi=pageInfo,cl=$('#cl');let b=null;
   if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac]}
   if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.borderStyle=b.q==='exact'?'solid':'dashed';ch.style.borderColor=b.q==='exact'?'#0a5fd0':'#d9730d';ch.style.background=b.q==='exact'?'rgba(0,120,255,.22)':'rgba(255,150,0,.18)';ch.style.display='block'}
+  dbgShow(b,cells);
   if(cl)cl.textContent='Cell '+(ac+1)+' / '+cells.length+(pi&&!b?' - not found on PDF':b&&b.q!=='exact'?' - approximate match (check text and position)':'')+'  (Tab = next cell)';
+}
+let dbg=false;
+function dbgShow(b,cells){
+  let d=$('#dbg');if(!d){d=document.createElement('div');d.id='dbg';d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:99;background:#111c;color:#fff;font:11px monospace;padding:6px 8px;border-radius:6px;max-width:92vw;white-space:pre-wrap';document.body.append(d)}
+  d.style.display=dbg?'block':'none';if(!dbg)return;
+  d.textContent=b?('Page '+data.pages[cur].page+'  Cell '+(ac+1)+'\nVerifier: '+b.cell+'\nPDF: '+b.pdf+'\nMatch: '+b.how+' ('+b.q+')\nWhy: '+b.why+'\nBox: x'+Math.round(b.x)+' y'+Math.round(b.y)+' w'+Math.round(b.w)+' h'+Math.round(b.h)):('Cell '+(ac+1)+': NOT FOUND\nVerifier: '+cells[ac]);
 }
 function stepCell(d){ac+=d;drawCell()}
 function focusPara(){
@@ -484,7 +525,7 @@ const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed});
 function setS(i,s){
   const p=data.pages[cur],x=p.paras[i];
   if(s==='ok'){ustack.push({pg:p.page,i,prev:snap(x)});x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
-  else{x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
+  else{if(x.status!=='wrong')ustack.push({pg:p.page,i,prev:snap(x)});x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
 }
 function saveFix(i){
   const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
@@ -575,6 +616,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='x'&&t>-1){e.preventDefault();setS(t,'wrong')}
   else if(e.key==='z')undo();
   else if(e.key==='r')rotate();
+  else if(e.key==='d'){dbg=!dbg;drawCell()}
   else if(e.key==='Tab'&&t>-1&&p.paras[t].text.includes(' | ')){e.preventDefault();stepCell(e.shiftKey?-1:1)}
 });
 
