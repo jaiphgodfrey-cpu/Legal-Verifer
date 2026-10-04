@@ -296,23 +296,42 @@ function buildIdx(items){
 }
 
 function locateAll(tc,paras){
-  let cursor=0;
-  return paras.map(x=>{
-    const n=nz(x.text);if(!n||!tc.norm)return null;
-    let s=-1;
+  const N=tc.norm;
+  const cs=paras.map(x=>{
+    const n=nz(x.text);if(!n||!N)return null;
     for(const len of [30,15,8]){
-      const pre=n.slice(0,Math.min(len,n.length));
-      s=tc.norm.indexOf(pre,cursor);
-      if(s<0)s=tc.norm.indexOf(pre);
-      if(s>=0)break;
+      const pre=n.slice(0,Math.min(len,n.length)),a=[];let k=N.indexOf(pre);
+      while(k>=0&&a.length<25){a.push(k);k=N.indexOf(pre,k+1)}
+      if(a.length)return{n,a,full:pre.length===Math.min(30,n.length)};
     }
-    if(s<0)return null;
-    cursor=s+1;
-    const tail=n.slice(-20);
-    let e=tc.norm.indexOf(tail,s);
-    e=e>=0?e+tail.length-1:Math.min(tc.norm.length-1,s+n.length-1);
-    return{s,e};
+    return null;
   });
+  /* ordered alignment: pick one candidate per paragraph (or none) so positions strictly increase and the most paragraphs match */
+  const dp=cs.map(()=>null);
+  cs.forEach((c,i)=>{
+    if(!c)return;
+    dp[i]=c.a.map(p=>{
+      let sc=1-p/1e7,pv=null;
+      for(let j=i-1;j>=0;j--){
+        if(!dp[j])continue;
+        dp[j].forEach((d,ci)=>{
+          if(d.p<p){const t=d.sc+1-(p-d.p)/1e7;if(t>sc){sc=t;pv=[j,ci]}}
+        });
+      }
+      return{p,sc,pv};
+    });
+  });
+  const out=paras.map(()=>null);
+  let bi=-1,bc=-1,bs=-1;
+  dp.forEach((d,i)=>{if(d)d.forEach((x,ci)=>{if(x.sc>bs){bs=x.sc;bi=i;bc=ci}})});
+  while(bi>=0){
+    const d=dp[bi][bc],c=cs[bi],n=c.n,s=d.p;
+    const tail=n.slice(-20),w=N.slice(s,s+n.length+80),t=w.indexOf(tail);
+    const e=t>=0?s+t+tail.length-1:Math.min(N.length-1,s+n.length-1);
+    out[bi]={s,e,q:(c.full&&t>=0)?'exact':'partial'};
+    if(!d.pv)break;[bi,bc]=d.pv;
+  }
+  return out;
 }
 
 async function loadPage(){
@@ -338,24 +357,73 @@ async function loadPage(){
 }
 
 let ac=0,acKey='';
+function rectOf(pi,its){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const it of its){
+    if(!it||!it.transform||!(it.str||'').trim())continue;
+    const h=it.height||Math.abs(it.transform[3])||10,x=it.transform[4],y=it.transform[5],w=it.width||0;
+    const a=pi.vp.convertToViewportPoint(x,y+h),b=pi.vp.convertToViewportPoint(x+w,y-h*.25);
+    x0=Math.min(x0,a[0],b[0]);x1=Math.max(x1,a[0],b[0]);y0=Math.min(y0,a[1],b[1]);y1=Math.max(y1,a[1],b[1]);
+  }
+  return isFinite(x0)?{x:x0-3,y:y0-2,w:x1-x0+6,h:y1-y0+4}:null;
+}
+function sim(a,b){
+  if(a===b)return 1;const m=a.length,n=b.length;if(!m||!n)return 0;
+  let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){let d=p[0];p[0]=i;for(let j=1;j<=n;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,d+(a[i-1]===b[j-1]?0:1));d=t}}
+  return 1-p[n]/Math.max(m,n);
+}
+/* column centres (PDF x) for the run of rows around row i that have the same cell count */
+function colCenters(pi,paras,i,k){
+  let g0=i,g1=i;
+  while(g0>0&&paras[g0-1].text.split(' | ').length===k)g0--;
+  while(g1<paras.length-1&&paras[g1+1].text.split(' | ').length===k)g1++;
+  const key=g0+':'+g1;pi.cc=pi.cc||{};if(pi.cc[key])return pi.cc[key];
+  const tc=pi.tc,acc=Array.from({length:k},()=>[]);
+  for(let r=g0;r<=g1;r++){
+    const pr=pi.pos[r];if(!pr)continue;let c=pr.s;
+    paras[r].text.split(' | ').forEach((cell,j)=>{
+      const n=nz(cell);if(!n)return;
+      const s=tc.norm.indexOf(n,c);if(s<0||s+n.length-1>pr.e+12)return;
+      c=s+n.length;const k0=tc.map[s],k1=tc.map[Math.min(s+n.length-1,tc.map.length-1)];
+      if(k0===k1){const it=tc.items[k0];if(it&&it.transform)acc[j].push(it.transform[4]+(it.width||0)/2)}
+    });
+  }
+  const med=a=>{if(!a.length)return null;a=a.slice().sort((x,y)=>x-y);return a[a.length>>1]};
+  let cc=acc.map(med);
+  cc=cc.map((v,j)=>v!==null?v:(j&&cc[j-1]!==null?cc[j-1]+60:100*j));
+  return pi.cc[key]=cc;
+}
 function cellBoxes(pi,i,cells){
   pi.cb=pi.cb||{};if(pi.cb[i])return pi.cb[i];
   const r=pi.pos[i];if(!r)return null;
-  const tc=pi.tc,lim=r.e+60;let c=r.s;
-  const out=cells.map(cell=>{
+  const tc=pi.tc,lim=r.e+12,paras=data.pages[cur].paras;let c=r.s;
+  const k0r=tc.map[r.s],k1r=tc.map[Math.min(r.e,tc.map.length-1)];
+  let cc=null,cols=null;
+  const out=cells.map((cell,j)=>{
     const n=nz(cell);if(!n)return null;
-    let s=tc.norm.indexOf(n,c),len=n.length;
-    if(s<0||s>lim){const pre=n.slice(0,Math.min(10,n.length));s=tc.norm.indexOf(pre,r.s);if(s<0||s>lim)return null;len=pre.length}
-    c=s+len;
-    const k0=tc.map[s],k1=tc.map[Math.min(s+len-1,tc.map.length-1)];
-    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-    for(let k=k0;k<=k1;k++){
-      const it=tc.items[k];if(!it||!it.transform||!(it.str||'').trim())continue;
-      const h=it.height||Math.abs(it.transform[3])||10,x=it.transform[4],y=it.transform[5],w=it.width||0;
-      const a=pi.vp.convertToViewportPoint(x,y+h),b=pi.vp.convertToViewportPoint(x+w,y-h*.25);
-      x0=Math.min(x0,a[0],b[0]);x1=Math.max(x1,a[0],b[0]);y0=Math.min(y0,a[1],b[1]);y1=Math.max(y1,a[1],b[1]);
+    /* 1. exact text, in order, inside the row */
+    const s=tc.norm.indexOf(n,c);
+    if(s>=0&&s+n.length-1<=lim){
+      c=s+n.length;
+      const k0=tc.map[s],k1=tc.map[Math.min(s+n.length-1,tc.map.length-1)];
+      const b=rectOf(pi,tc.items.slice(k0,k1+1));
+      if(b){b.q=r.q==='exact'?'exact':'approx';return b}
     }
-    return isFinite(x0)?{x:x0-3,y:y0-2,w:x1-x0+6,h:y1-y0+4}:null;
+    /* 2. column + row-band fuzzy match (tolerates extraction typos) */
+    if(!cc){cc=colCenters(pi,paras,i,cells.length);
+      cols=cc.map(()=>[]);
+      for(let k=k0r;k<=k1r;k++){const it=tc.items[k];if(!it||!it.transform||!(it.str||'').trim())continue;
+        const x=it.transform[4]+(it.width||0)/2;let bj=0;
+        cc.forEach((v,q)=>{if(Math.abs(v-x)<Math.abs(cc[bj]-x))bj=q});
+        cols[bj].push(it)}
+      cols.forEach(a=>a.sort((p,q)=>(q.transform[5]-p.transform[5])||(p.transform[4]-q.transform[4])));
+    }
+    const col=cols[j];if(!col||!col.length)return null;
+    let best=0,bk=0,acc='';
+    for(let k=1;k<=Math.min(14,col.length);k++){acc+=nz(col[k-1].str);const q=sim(n,acc);if(q>best+1e-9){best=q;bk=k}}
+    if(best<0.85)return null;
+    const b=rectOf(pi,col.slice(0,bk));if(b)b.q='approx';return b;
   });
   return pi.cb[i]=out;
 }
@@ -369,8 +437,8 @@ function drawCell(){
   document.querySelectorAll('.tb.ro td').forEach((td,j)=>td.classList.toggle('act',j===ac));
   const pi=pageInfo,cl=$('#cl');let b=null;
   if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac]}
-  if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.display='block'}
-  if(cl)cl.textContent='Cell '+(ac+1)+' / '+cells.length+(pi&&!b?' - not found on PDF':'')+'  (Tab = next cell)';
+  if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.borderStyle=b.q==='exact'?'solid':'dashed';ch.style.borderColor=b.q==='exact'?'#0a5fd0':'#d9730d';ch.style.background=b.q==='exact'?'rgba(0,120,255,.22)':'rgba(255,150,0,.18)';ch.style.display='block'}
+  if(cl)cl.textContent='Cell '+(ac+1)+' / '+cells.length+(pi&&!b?' - not found on PDF':b&&b.q!=='exact'?' - approximate match (check text and position)':'')+'  (Tab = next cell)';
 }
 function stepCell(d){ac+=d;drawCell()}
 function focusPara(){
