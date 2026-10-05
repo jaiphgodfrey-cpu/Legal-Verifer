@@ -158,8 +158,17 @@ const blobUrl=id=>{const b=atob($(id).textContent.trim()),a=new Uint8Array(b.len
 const libReady=(async()=>{window.pdfjsLib=await import(blobUrl('#pl'));pdfjsLib.GlobalWorkerOptions.workerSrc=blobUrl('#pw')})();
 
 /* ---------- storage: browser database + optional project file ---------- */
-const DB=new Promise((res,rej)=>{const r=indexedDB.open('lv',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('p',{keyPath:'id'});d.createObjectStore('h');d.createObjectStore('f')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
-const tx=async(st,m,f)=>{const d=await DB;return new Promise((res,rej)=>{const t=d.transaction(st,m),q=f(t.objectStore(st));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+const DB=new Promise(res=>{
+  let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+  try{const r=indexedDB.open('lv',1);
+    r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('p',{keyPath:'id'});d.createObjectStore('h');d.createObjectStore('f')};
+    r.onsuccess=()=>fin(r.result);r.onerror=()=>fin(null);r.onblocked=()=>fin(null);
+  }catch(e){fin(null)}
+  setTimeout(()=>fin(null),2500);
+});
+const MEM={p:new Map(),h:new Map(),f:new Map()};
+const memStore=st=>({put:(v,k)=>{const key=st==='p'?v.id:k;MEM[st].set(key,v);return{result:key}},get:k=>({result:MEM[st].get(k)}),getAll:()=>({result:[...MEM[st].values()]}),delete:k=>{MEM[st].delete(k);return{result:undefined}}});
+const tx=async(st,m,f)=>{const d=await DB;if(!d){const q=f(memStore(st));return q&&q.result}return new Promise((res,rej)=>{const t=d.transaction(st,m),q=f(t.objectStore(st));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
 const dbPut=(st,v,k)=>tx(st,'readwrite',o=>o.put(v,k));
 const dbGet=(st,k)=>tx(st,'readonly',o=>o.get(k));
 const dbAll=st=>tx(st,'readonly',o=>o.getAll());
