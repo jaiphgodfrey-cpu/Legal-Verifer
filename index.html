@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a4d8f">
+<link rel="icon" href="icon-192.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Legal Verifier</title>
@@ -657,5 +660,6 @@ $('#ex').onclick=()=>{
   a.download=base+'_'+tag+'_'+new Date().toISOString().slice(0,10)+'.json';a.click();
 };
 </script>
+<script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
 </html>
