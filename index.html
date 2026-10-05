@@ -368,7 +368,7 @@ async function loadPage(){
   await task.promise.catch(()=>{});
 }
 
-let ac=0,acKey='';
+let ac=0,acKey='',seen=new Set();
 function rectOf(pi,its){
   let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
   for(const it of its){
@@ -486,8 +486,9 @@ function drawCell(follow){
   if(!data)return;
   const p=data.pages[cur],i=topIdx(p);if(i<0)return;
   const cells=p.paras[i].text.split(' | ');if(cells.length<2)return;
-  const key=p.page+':'+i;if(key!==acKey){acKey=key;ac=0}
-  ac=Math.max(0,Math.min(cells.length-1,ac));
+  const key=p.page+':'+i;if(key!==acKey){acKey=key;ac=0;seen=new Set()}
+  ac=Math.max(0,Math.min(cells.length-1,ac));seen.add(ac);
+  const ob=$('#okb');if(ob)ob.textContent=seen.size<cells.length?'Correct: next cell':'Correct: finish row';
   document.querySelectorAll('.tb.ro td').forEach((td,j)=>td.classList.toggle('act',j===ac));
   const pi=pageInfo,cl=$('#cl');let b=null;
   if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac]}
@@ -548,6 +549,20 @@ function setS(i,s){
   if(s==='ok'){ustack.push({pg:p.page,i,prev:snap(x)});x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
   else{if(x.status!=='wrong')ustack.push({pg:p.page,i,prev:snap(x)});x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
 }
+function okStep(i){
+  const p=data.pages[cur],x=p.paras[i],n=x.text.split(' | ').length;
+  if(n>1&&seen.size<n&&acKey===p.page+':'+i){
+    let nx=-1;for(let j=ac+1;j<n;j++)if(!seen.has(j)){nx=j;break}
+    if(nx<0)for(let j=0;j<n;j++)if(!seen.has(j)){nx=j;break}
+    ac=nx;drawCell(true);return;
+  }
+  setS(i,'ok');
+}
+function mergeRow(i){
+  const p=data.pages[cur],x=p.paras[i];
+  ustack.push({pg:p.page,i,prev:snap(x)});
+  x.status='wrong';x.fix=x.text.split(' | ').join(' ').replace(/\s+/g,' ').trim();x.fixed=true;edIdx=null;afterChange(false);
+}
 function saveFix(i){
   const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
   if(ta)x.fix=ta.value;
@@ -581,7 +596,11 @@ function renderSide(focusTa){
     else d.append(el('div','tx',x.text));
     if(k===0){
       const r=el('div','row'),ok=el('button','good','Correct'),bd=el('button','bad'+(x.status==='wrong'?' on':''),'Wrong');
-      ok.onclick=()=>setS(i,'ok');bd.onclick=()=>setS(i,'wrong');r.append(ok,bd);d.append(r);
+      ok.onclick=()=>okStep(i);bd.onclick=()=>setS(i,'wrong');r.append(ok,bd);
+      if(isT){ok.id='okb';ok.textContent='Correct: next cell';
+        const ar=el('button','','Accept row'),mg=el('button','','One sentence');
+        ar.onclick=()=>setS(i,'ok');mg.onclick=()=>mergeRow(i);r.append(ar,mg)}
+      d.append(r);
       if(x.status==='wrong'){
         let ta;
         if(isT){
@@ -589,7 +608,10 @@ function renderSide(focusTa){
           fc.forEach((c,j)=>{const td=el('td'),inp=el('input');if(j===0)inp.id='fixc';inp.value=c;
             inp.onfocus=()=>{ac=j;drawCell(true)};inp.oninput=()=>{fc[j]=inp.value;x.fix=fc.join(' | ');save();drawMap()};
             inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();saveFix(i)}};
-            td.append(inp);r.append(td)});
+            td.append(inp);
+            if(j<fc.length-1){const mb=el('button','','Merge with next');mb.style.cssText='display:block;margin-top:4px;font-size:12px';
+              mb.onclick=()=>{fc.splice(j,2,(fc[j]+' '+fc[j+1]).replace(/\s+/g,' ').trim());x.fix=fc.join(' | ');save();drawMap();ac=j;renderSide(true)};td.append(mb)}
+            r.append(td)});
           t.append(r);w.append(t);ta=w;
         }else{
           ta=el('textarea');ta.id='fixta';ta.value=x.fix||x.text;
@@ -633,7 +655,8 @@ document.addEventListener('keydown',e=>{
   const p=data.pages[cur],t=topIdx(p);
   if(e.key==='ArrowRight')go(cur+1);
   else if(e.key==='ArrowLeft')go(cur-1);
-  else if(e.key==='c'&&t>-1)setS(t,'ok');
+  else if(e.key==='c'&&t>-1)okStep(t);
+  else if(e.key==='a'&&t>-1)setS(t,'ok');
   else if(e.key==='x'&&t>-1){e.preventDefault();setS(t,'wrong')}
   else if(e.key==='z')undo();
   else if(e.key==='r')rotate();
