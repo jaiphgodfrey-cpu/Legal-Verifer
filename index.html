@@ -461,7 +461,15 @@ function cellBoxes(pi,i,cells){
   });
   return pi.cb[i]=res;
 }
-function drawCell(){
+function followCell(b){
+  const sc=$('#src'),w=$('#wrap');if(!sc||!w||!b)return;
+  const top=w.offsetTop+b.y,left=w.offsetLeft+b.x,vt=sc.scrollTop,vh=sc.clientHeight,vl=sc.scrollLeft,vw=sc.clientWidth;
+  let ny=null,nx=null;
+  if(top<vt+40||top+b.h>vt+vh-60)ny=Math.max(0,top-vh/2+b.h/2);
+  if(left<vl+10||left+b.w>vl+vw-10)nx=Math.max(0,left-vw/2+b.w/2);
+  if(ny!==null||nx!==null)sc.scrollTo({top:ny!==null?ny:vt,left:nx!==null?nx:vl,behavior:'smooth'});
+}
+function drawCell(follow){
   const ch=$('#ch');ch.style.display='none';
   if(!data)return;
   const p=data.pages[cur],i=topIdx(p);if(i<0)return;
@@ -472,6 +480,7 @@ function drawCell(){
   const pi=pageInfo,cl=$('#cl');let b=null;
   if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac]}
   if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.borderStyle=b.q==='exact'?'solid':'dashed';ch.style.borderColor=b.q==='exact'?'#0a5fd0':'#d9730d';ch.style.background=b.q==='exact'?'rgba(0,120,255,.22)':'rgba(255,150,0,.18)';ch.style.display='block'}
+  if(follow&&b)followCell(b);
   dbgShow(b,cells);
   if(cl)cl.textContent='Cell '+(ac+1)+' / '+cells.length+(pi&&!b?' - not found on PDF':b&&b.q!=='exact'?' - approximate match (check text and position)':'')+'  (Tab = next cell)';
 }
@@ -481,7 +490,7 @@ function dbgShow(b,cells){
   d.style.display=dbg?'block':'none';if(!dbg)return;
   d.textContent=b?('Page '+data.pages[cur].page+'  Cell '+(ac+1)+'\nVerifier: '+b.cell+'\nPDF: '+b.pdf+'\nMatch: '+b.how+' ('+b.q+')\nWhy: '+b.why+'\nBox: x'+Math.round(b.x)+' y'+Math.round(b.y)+' w'+Math.round(b.w)+' h'+Math.round(b.h)):('Cell '+(ac+1)+': NOT FOUND\nVerifier: '+cells[ac]);
 }
-function stepCell(d){ac+=d;drawCell()}
+function stepCell(d){ac+=d;drawCell(true)}
 function focusPara(){
   const p=data.pages[cur],pi=pageInfo,hl=$('#hl');
   if(!pi||pi.pn!==p.page)return;
@@ -556,7 +565,7 @@ function renderSide(focusTa){
   pend.slice(0,4).forEach((i,k)=>{
     const x=p.paras[i],d=el('div','para '+(k===0?'act':'wait'));
     const cells=x.text.split(' | '),isT=cells.length>1;
-    if(isT&&k===0){const w=el('div','tw'),t=el('table','tb ro'),r=el('tr');cells.forEach((c,j)=>{const td=el('td','',c);td.onclick=()=>{ac=j;drawCell()};r.append(td)});t.append(r);w.append(t);d.append(w);const cl=el('div','cl','');cl.id='cl';d.append(cl);setTimeout(drawCell,0)}
+    if(isT&&k===0){const w=el('div','tw'),t=el('table','tb ro'),r=el('tr');cells.forEach((c,j)=>{const td=el('td','',c);td.onclick=()=>{ac=j;drawCell(true)};r.append(td)});t.append(r);w.append(t);d.append(w);const cl=el('div','cl','');cl.id='cl';d.append(cl);setTimeout(drawCell,0)}
     else d.append(el('div','tx',x.text));
     if(k===0){
       const r=el('div','row'),ok=el('button','good','Correct'),bd=el('button','bad'+(x.status==='wrong'?' on':''),'Wrong');
@@ -566,7 +575,7 @@ function renderSide(focusTa){
         if(isT){
           const fc=(x.fix||x.text).split(' | '),w=el('div','tw'),t=el('table','tb'),r=el('tr');
           fc.forEach((c,j)=>{const td=el('td'),inp=el('input');if(j===0)inp.id='fixc';inp.value=c;
-            inp.onfocus=()=>{ac=j;drawCell()};inp.oninput=()=>{fc[j]=inp.value;x.fix=fc.join(' | ');save();drawMap()};
+            inp.onfocus=()=>{ac=j;drawCell(true)};inp.oninput=()=>{fc[j]=inp.value;x.fix=fc.join(' | ');save();drawMap()};
             inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();saveFix(i)}};
             td.append(inp);r.append(td)});
           t.append(r);w.append(t);ta=w;
