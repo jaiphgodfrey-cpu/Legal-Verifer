@@ -40,6 +40,11 @@ summary{cursor:pointer}
 .para.act{border-color:#222;border-width:2px;padding:9px}
 .para.wait{opacity:.5}
 .para .tx{white-space:pre-wrap;margin-bottom:8px}
+.wm{background:#e3f2e5;color:#1b5e20;border-radius:2px}
+.wd{background:#fde0e0;color:#b00020;font-weight:700;border-radius:2px;text-decoration:underline}
+.wnote{font-size:12px;color:#555;margin:-2px 0 8px;line-height:1.4}
+.wnote.unk{color:#888;font-style:italic}
+.tb.ro td.wu{color:#888;font-style:italic}
 .para.wait .tx{margin:0}
 .para .row{display:flex;gap:8px;flex-wrap:wrap}
 .para textarea,#miss{width:100%;margin-top:8px;font:inherit;padding:6px;border:1px solid #888;border-radius:3px;resize:vertical;min-height:70px}
@@ -101,7 +106,7 @@ header .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellips
 .tw{overflow-x:auto;margin-top:6px}
 .tb{border-collapse:collapse;width:100%;font-size:13px}
 .tb td{border:1px solid #ccc;padding:4px 6px;vertical-align:top}
-#ch{position:absolute;background:rgba(0,120,255,.22);border:2px solid #0a5fd0;pointer-events:none;display:none}
+#ch{position:absolute;background:rgba(255,215,0,.38);border:2px solid #d9a600;pointer-events:none;display:none}
 .tb td.act{background:#dbeafe;outline:2px solid #0a5fd0}
 .cl{font-size:12px;color:#555;margin-top:4px}
 .tb input{width:100%;min-width:60px;box-sizing:border-box;padding:4px;border:1px solid #999;font:inherit}
@@ -120,7 +125,7 @@ header .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellips
 </div>
 
 <header class="hide" id="hd">
-  <div class="hl"><button id="nw">Home</button><span class="zg"><button id="zo" title="Zoom out">-</button><button id="zi" title="Zoom in">+</button><button id="rt" title="Rotate page (R)">Rotate</button></span></div>
+  <div class="hl"><button id="nw">Home</button><span class="zg"><button id="zo" title="Zoom out">-</button><button id="zi" title="Zoom in">+</button><button id="wc" title="Word check against the PDF text">Words</button><button id="rt" title="Rotate page (R)">Rotate</button></span></div>
   <div class="t" id="ttl"></div>
   <div class="hr"><span id="sv"></span><span id="prog"></span><button id="fs">Save</button><button id="ex">Export</button><button id="exc">Export clean</button></div>
 </header>
@@ -346,14 +351,16 @@ function locateAll(tc,paras){
   return out;
 }
 
+let zoomKeep=null;
 async function loadPage(){
-  const t=++tok,pn=data.pages[cur].page;
+  const t=++tok,pn=data.pages[cur].page,keep=zoomKeep;zoomKeep=null;
   $('#hl').style.display='none';pageInfo=null;
   const pg=await pdf.getPage(pn).catch(()=>null);
   if(!pg||t!==tok)return;
   const w=Math.max(300,$('#src').clientWidth-26),rot=((pg.rotate||0)+(data.pages[cur].rot||0))%360,v0=pg.getViewport({scale:1,rotation:rot}),s=w/v0.width*zoom,d=window.devicePixelRatio||1;
   const v=pg.getViewport({scale:s*d,rotation:rot}),c=$('#cv');
   c.width=v.width;c.height=v.height;c.style.width=v0.width*s+'px';c.style.height=v0.height*s+'px';
+  if(keep){const sc=$('#src'),w=$('#wrap');sc.scrollLeft=w.offsetLeft+keep.fx*w.offsetWidth-sc.clientWidth/2;sc.scrollTop=w.offsetTop+keep.fy*w.offsetHeight-sc.clientHeight/2}
   if(rt){try{rt.cancel()}catch(e){}}
   rt=pg.render({canvas:c,canvasContext:c.getContext('2d'),viewport:v});
   const task=rt;
@@ -364,7 +371,7 @@ async function loadPage(){
   }
   if(t!==tok)return;
   pageInfo={pn,vp:pg.getViewport({scale:s,rotation:rot}),tc,pos:locateAll(tc,data.pages[cur].paras)};
-  focusPara();
+  focusPara(!!keep);
   await task.promise.catch(()=>{});
 }
 
@@ -467,7 +474,9 @@ function cellBoxes(pi,i,cells){
     }
     let best=0,bk=0,acc='';
     for(let k=1;k<=Math.min(14,chain.length);k++){acc+=nz(tc.items[chain[k-1]].str);const q=sim(n,acc);if(q>best+1e-9){best=q;bk=k}}
-    const need=n.length<6?1:0.85;
+    /* relaxed acceptance (0.80), still gated by column + row-line geometry; short text must be unique on the page */
+    let occ=0,s2=tc.norm.indexOf(n);while(s2>=0&&occ<3){occ++;s2=tc.norm.indexOf(n,s2+1)}
+    const shortU=n.length<6,need=shortU?(occ<=1?0.8:1):0.8;
     if(best<need)return;
     res[j]=mk(chain.slice(0,bk),'column-fuzzy','inside this column on the row line; text similarity '+best.toFixed(2),'approx',cell);
   });
@@ -491,8 +500,8 @@ function drawCell(follow){
   const ob=$('#okb');if(ob)ob.textContent=seen.size<cells.length?'Correct: next cell':'Correct: finish row';
   document.querySelectorAll('.tb.ro td').forEach((td,j)=>td.classList.toggle('act',j===ac));
   const pi=pageInfo,cl=$('#cl');let b=null;
-  if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac]}
-  if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.borderStyle=b.q==='exact'?'solid':'dashed';ch.style.borderColor=b.q==='exact'?'#0a5fd0':'#d9730d';ch.style.background=b.q==='exact'?'rgba(0,120,255,.22)':'rgba(255,150,0,.18)';ch.style.display='block'}
+  if(pi&&pi.pn===p.page){const bx=cellBoxes(pi,i,cells);b=bx&&bx[ac];colourCells(cells,bx)}
+  if(b){ch.style.left=b.x+'px';ch.style.top=b.y+'px';ch.style.width=b.w+'px';ch.style.height=b.h+'px';ch.style.borderStyle=b.q==='exact'?'solid':'dashed';ch.style.display='block';$('#hl').style.display='none'}
   if(follow&&b)followCell(b);
   dbgShow(b,cells);
   if(cl)cl.textContent='Cell '+(ac+1)+' / '+cells.length+(pi&&!b?' - not found on PDF':b&&b.q!=='exact'?' - approximate match (check text and position)':'')+'  (Tab = next cell)';
@@ -504,7 +513,69 @@ function dbgShow(b,cells){
   d.textContent=b?('Page '+data.pages[cur].page+'  Cell '+(ac+1)+'\nVerifier: '+b.cell+'\nPDF: '+b.pdf+'\nMatch: '+b.how+' ('+b.q+')\nWhy: '+b.why+'\nBox: x'+Math.round(b.x)+' y'+Math.round(b.y)+' w'+Math.round(b.w)+' h'+Math.round(b.h)):('Cell '+(ac+1)+': NOT FOUND\nVerifier: '+cells[ac]);
 }
 function stepCell(d){ac+=d;drawCell(true)}
-function focusPara(){
+let wc=(()=>{try{return localStorage.getItem('lv-wc')||'err'}catch(e){return'err'}})();
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const wtok=t=>String(t).split(/\s+/).filter(Boolean).map(w=>({w,n:nz(w)}));
+function wdiff(sent,pdf){
+  const A=sent.filter(t=>t.n),B=pdf.filter(t=>t.n);
+  if(A.length*B.length>2500000)return null;
+  const m=A.length,n=B.length,L=Array.from({length:m+1},()=>new Uint16Array(n+1));
+  for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)L[i][j]=A[i].n===B[j].n?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  const pdfOnly=[];let i=0,j=0,gA=[],gB=[];
+  const flush=()=>{const k=Math.min(gA.length,gB.length);for(let q=0;q<k;q++)A[gA[q]].pair=B[gB[q]].w;for(let q=k;q<gB.length;q++)pdfOnly.push(B[gB[q]].w);gA=[];gB=[]};
+  A.forEach(t=>{t.s='d';delete t.pair});
+  while(i<m||j<n){
+    if(i<m&&j<n&&A[i].n===B[j].n){flush();A[i].s='m';i++;j++}
+    else if(j>=n||(i<m&&L[i+1][j]>=L[i][j+1])){gA.push(i);i++}
+    else{gB.push(j);j++}
+  }
+  flush();
+  return{pdfOnly,nd:A.filter(t=>t.s==='d').length,nm:A.filter(t=>t.s==='m').length};
+}
+function wrender(sent){
+  return sent.map(t=>{
+    if(!t.n)return esc(t.w);
+    if(t.s==='d')return '<span class="wd"'+(t.pair?' title="PDF: '+esc(t.pair)+'"':'')+'>'+esc(t.w)+'</span>';
+    return wc==='all'?'<span class="wm">'+esc(t.w)+'</span>':esc(t.w);
+  }).join(' ');
+}
+function wnote(sent,r,approx){
+  const bits=[];
+  if(r.nd)bits.push(r.nd+' word'+(r.nd>1?'s':'')+' differ from the PDF');
+  const pr=sent.filter(t=>t.s==='d'&&t.pair).map(t=>t.w+' \u2192 '+t.pair);
+  if(pr.length)bits.push('PDF reads: '+pr.slice(0,6).join(', ')+(pr.length>6?'...':''));
+  if(r.pdfOnly.length)bits.push('In the PDF but not in the sentence: '+r.pdfOnly.slice(0,10).join(' ')+(r.pdfOnly.length>10?' ...':''));
+  if(!bits.length)bits.push('All words match the PDF text'+(approx?' (approximate location)':''));
+  return bits.join('. ');
+}
+function colourPara(i){
+  const tx=document.querySelector('.para.act .tx');if(!tx)return;
+  const old=tx.nextElementSibling;if(old&&old.classList.contains('wnote'))old.remove();
+  const p=data.pages[cur],x=p.paras[i];if(!x||x.text.includes(' | '))return;
+  if(wc==='off'){tx.textContent=x.text;return}
+  const pi=pageInfo,r=pi&&pi.pn===p.page?pi.pos[i]:null,note=document.createElement('div');note.className='wnote';
+  if(!r){tx.textContent=x.text;note.className+=' unk';note.textContent='Location not found on the PDF, so words are not compared.';tx.after(note);return}
+  const k0=pi.tc.map[r.s],k1=pi.tc.map[Math.min(r.e,pi.tc.map.length-1)];
+  const pdfT=pi.tc.items.slice(k0,k1+1).map(it=>it.str||'').join(' ');
+  const sent=wtok(x.text),res=wdiff(sent,wtok(pdfT));
+  if(!res){tx.textContent=x.text;return}
+  tx.innerHTML=wrender(sent);note.textContent=wnote(sent,res,r.q!=='exact');tx.after(note);
+}
+function colourCells(cells,bx){
+  const tds=document.querySelectorAll('.tb.ro td');
+  cells.forEach((c,j)=>{
+    const td=tds[j];if(!td)return;const b=bx&&bx[j];
+    td.classList.remove('wu');td.removeAttribute('title');
+    if(wc==='off'){td.textContent=c;return}
+    if(!b){td.textContent=c;td.classList.add('wu');td.title='Not found on the PDF, so not compared';return}
+    if(b.how==='exact'&&b.q==='exact'){td.innerHTML=wc==='all'?'<span class="wm">'+esc(c)+'</span>':esc(c);return}
+    const sent=wtok(c),res=wdiff(sent,wtok(b.pdf||''));
+    if(!res){td.textContent=c;return}
+    td.innerHTML=wrender(sent);
+    if(res.nd||res.pdfOnly.length)td.title='PDF reads: '+(b.pdf||'');
+  });
+}
+function focusPara(noScroll){
   const p=data.pages[cur],pi=pageInfo,hl=$('#hl');
   if(!pi||pi.pn!==p.page)return;
   const i=topIdx(p);
@@ -526,8 +597,9 @@ function focusPara(){
   if(top===undefined)top=c.clientHeight*(i/Math.max(1,p.paras.length));
   if(bot!==null){hl.style.top=top+'px';hl.style.height=Math.max(8,bot-top)+'px';hl.style.display='block'}
   else hl.style.display='none';
-  $('#src').scrollTo({top:Math.max(0,$('#wrap').offsetTop+top-70),behavior:'smooth'});
+  if(!noScroll)$('#src').scrollTo({top:Math.max(0,$('#wrap').offsetTop+top-70),behavior:'smooth'});
   drawCell();
+  colourPara(i);
 }
 
 /* ---------- side panel ---------- */
@@ -641,8 +713,18 @@ function renderSide(focusTa){
 
 $('#pv').onclick=()=>go(cur-1);
 $('#nx').onclick=()=>go(cur+1);
-$('#zi').onclick=()=>{zoom=Math.min(3,zoom+.2);loadPage()};
-$('#zo').onclick=()=>{zoom=Math.max(.4,zoom-.2);loadPage()};
+function zoomTo(z){
+  if(!data)return;
+  const nz=Math.max(.4,Math.min(3,z));if(Math.abs(nz-zoom)<1e-6)return;
+  const sc=$('#src'),w=$('#wrap');
+  zoomKeep={fx:(sc.scrollLeft+sc.clientWidth/2-w.offsetLeft)/Math.max(1,w.offsetWidth),fy:(sc.scrollTop+sc.clientHeight/2-w.offsetTop)/Math.max(1,w.offsetHeight)};
+  zoom=nz;loadPage();
+}
+const wcLbl=()=>{$('#wc').textContent='Words: '+({err:'errors',all:'all',off:'off'}[wc])};
+$('#wc').onclick=()=>{wc=wc==='err'?'all':wc==='all'?'off':'err';try{localStorage.setItem('lv-wc',wc)}catch(e){}wcLbl();if(data){const p=data.pages[cur],t=topIdx(p);if(t>-1){colourPara(t);drawCell()}}};
+wcLbl();
+$('#zi').onclick=()=>zoomTo(zoom+.2);
+$('#zo').onclick=()=>zoomTo(zoom-.2);
 const rotate=()=>{const p=data.pages[cur];p.rot=((p.rot||0)+90)%360;save();loadPage()};
 $('#rt').onclick=rotate;
 $('#nw').onclick=()=>location.reload();
@@ -650,6 +732,11 @@ window.onresize=()=>{if(data)loadPage()};
 
 document.addEventListener('keydown',e=>{
   if(!data)return;
+  if((e.ctrlKey||e.metaKey)&&!e.altKey){
+    if(e.key==='+'||e.key==='='){e.preventDefault();zoomTo(zoom+.2);return}
+    if(e.key==='-'||e.key==='_'){e.preventDefault();zoomTo(zoom-.2);return}
+    if(e.key==='0'){e.preventDefault();zoomTo(1);return}
+  }
   if(/TEXTAREA|INPUT/.test(e.target.tagName)){if(e.key==='Escape')e.target.blur();return}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   const p=data.pages[cur],t=topIdx(p);
