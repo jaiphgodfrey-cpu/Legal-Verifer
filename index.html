@@ -122,7 +122,7 @@ header .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellips
 <header class="hide" id="hd">
   <div class="hl"><button id="nw">Home</button><span class="zg"><button id="zo" title="Zoom out">-</button><button id="zi" title="Zoom in">+</button><button id="rt" title="Rotate page (R)">Rotate</button></span></div>
   <div class="t" id="ttl"></div>
-  <div class="hr"><span id="sv"></span><span id="prog"></span><button id="fs">Save</button><button id="ex">Export</button></div>
+  <div class="hr"><span id="sv"></span><span id="prog"></span><button id="fs">Save</button><button id="ex">Export</button><button id="exc">Export clean</button></div>
 </header>
 <div id="map" class="hide"></div>
 <main class="hide" id="mn">
@@ -681,6 +681,28 @@ $('#ex').onclick=()=>{
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
   a.download=base+'_'+tag+'_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+};
+
+$('#exc').onclick=()=>{
+  const total=data.pages.length,okp=data.pages.filter(done),bad=data.pages.filter(p=>!done(p)).map(p=>p.page);
+  if(!okp.length){alert('No page is fully verified yet, so there is nothing to export.');return}
+  if(bad.length&&!confirm(bad.length+' page(s) are not fully verified and will be left out (pages: '+bad.join(', ')+'). Export the verified pages only?'))return;
+  const out={
+    instrument:data.instrument,source:pdfName,exported:new Date().toISOString(),
+    complete:!bad.length,pages_total:total,pages_included:okp.length,pages_not_verified:bad,
+    pages:okp.map(p=>{
+      const o={page:p.page,paragraphs:p.paras.map(x=>x.status==='ok'?x.text:(x.status==='wrong'&&x.fixed?x.fix:null)).filter(t=>t!==null)};
+      if(p.missing&&p.missing.trim())o.missing=p.missing;
+      if(p.blank)o.blank=true;
+      return o;
+    })
+  };
+  let base=(pdfName.replace(/\.pdf$/i,'')||data.instrument).replace(/[^\w\-]+/g,'_');
+  const gm=data.pages[0].paras.map(x=>x.text).join(' ').match(/GOVERNMENT NOTICE NO\.?\s*(\d+)/i);
+  if(gm&&!/gn/i.test(base))base='GN_'+gm[1]+'_'+base;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
+  a.download=base+'_clean_'+(bad.length?'partial_'+okp.length+'-of-'+total:'complete')+'_'+new Date().toISOString().slice(0,10)+'.json';a.click();
 };
 </script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
