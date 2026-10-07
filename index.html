@@ -209,7 +209,7 @@ const stamp=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit
 let pdfBuf=null,curId='',fh=null,wt=null,b64c=null;
 
 function save(){
-  if(ustack.length>300)ustack.splice(0,ustack.length-300);
+  if(ustack.length>300)ustack.splice(0,ustack.length-300);if(rstack.length>300)rstack.splice(0,rstack.length-300);
   data.savedAt=new Date().toISOString();
   dbPut('p',{id:curId,instrument:data.instrument,pdfName,savedAt:data.savedAt,ok:data.pages.filter(done).length,total:data.pages.length,data})
     .then(()=>{$('#sv').textContent='Saved '+stamp()})
@@ -242,7 +242,7 @@ $('#fs').onclick=async()=>{
 /* ---------- opening ---------- */
 async function start(buf,name,d,handle){
   try{await libReady}catch(e){alert('The built-in PDF reader could not start in this browser. Please use a recent Chrome, Edge, Firefox or Safari.');return}
-  pdfBuf=buf;pdfName=name;data=d;ustack=d.ustack=Array.isArray(d.ustack)?d.ustack:[];curId=d.instrument;fh=handle||null;b64c=null;
+  pdfBuf=buf;pdfName=name;data=d;ustack=d.ustack=Array.isArray(d.ustack)?d.ustack:[];rstack=d.rstack=Array.isArray(d.rstack)?d.rstack:[];curId=d.instrument;fh=handle||null;b64c=null;
   try{pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise}
   catch(e){alert('Could not open the PDF.');return}
   dbPut('f',buf,curId).catch(()=>{});
@@ -702,12 +702,13 @@ function afterChange(focusTa){
   save();drawMap();renderSide(focusTa);focusPara();
 }
 
-let ustack=[];
+let ustack=[],rstack=[];
 const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed});
+function pushU(pg,i,x){ustack.push({pg,i,prev:snap(x)});rstack.length=0}
 function setS(i,s){
   const p=data.pages[cur],x=p.paras[i];
-  if(s==='ok'){learn(i);ustack.push({pg:p.page,i,prev:snap(x)});x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
-  else{if(x.status!=='wrong')ustack.push({pg:p.page,i,prev:snap(x)});x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
+  if(s==='ok'){learn(i);pushU(p.page,i,x);x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
+  else{if(x.status!=='wrong')pushU(p.page,i,x);x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
 }
 function okStep(i){
   const p=data.pages[cur],x=p.paras[i],n=x.text.split(' | ').length;
@@ -720,7 +721,7 @@ function okStep(i){
 }
 function mergeRow(i){
   const p=data.pages[cur],x=p.paras[i];
-  ustack.push({pg:p.page,i,prev:snap(x)});
+  pushU(p.page,i,x);
   x.status='wrong';x.fix=x.text.split(' | ').join(' ').replace(/\s+/g,' ').trim();x.fixed=true;edIdx=null;afterChange(false);
 }
 function saveFix(i){
@@ -728,15 +729,34 @@ function saveFix(i){
   if(ta)x.fix=ta.value;
   if(!x.fix.trim()){alert('Type the correct text first.');return}
   if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
-  learn(i);ustack.push({pg:p.page,i,prev:snap(x)});
+  learn(i);pushU(p.page,i,x);
   x.fixed=true;edIdx=null;afterChange(false);
 }
 function undo(){
-  const u=ustack.pop();if(!u)return;
+  let u=ustack.pop();
+  if(!u){ /* no history (e.g. work saved before undo was remembered): un-mark the last marked sentence, going backwards */
+    for(let k=Math.min(cur,data.pages.length-1);k>=0&&!u;k--){
+      const ps=data.pages[k].paras;
+      for(let i=ps.length-1;i>=0;i--)if(ps[i].status){u={pg:data.pages[k].page,i,prev:{status:null,fix:'',fixed:false}};break}
+    }
+    if(!u)return;
+  }
   const k=data.pages.findIndex(q=>q.page===u.pg);if(k<0)return;
-  const x=data.pages[k].paras[u.i];Object.assign(x,u.prev);if(data.pages[k].anch)delete data.pages[k].anch[u.i];
+  const x=data.pages[k].paras[u.i];
+  rstack.push({pg:u.pg,i:u.i,next:snap(x)});
+  Object.assign(x,u.prev);if(data.pages[k].anch)delete data.pages[k].anch[u.i];
   cur=k;show();
   edIdx=(x.status==='wrong'&&!x.fixed)?u.i:null;
+  save();drawMap();renderSide(x.status==='wrong');focusPara();
+}
+function redo(){
+  const r=rstack.pop();if(!r)return;
+  const k=data.pages.findIndex(q=>q.page===r.pg);if(k<0)return;
+  const x=data.pages[k].paras[r.i];
+  ustack.push({pg:r.pg,i:r.i,prev:snap(x)});
+  Object.assign(x,r.next);
+  cur=k;show();
+  edIdx=(x.status==='wrong'&&!x.fixed)?r.i:null;
   save();drawMap();renderSide(x.status==='wrong');focusPara();
 }
 function el(t,c,txt){const e=document.createElement(t);if(c)e.className=c;if(txt!==undefined)e.textContent=txt;return e}
@@ -745,9 +765,9 @@ function renderSide(focusTa){
   const p=data.pages[cur],side=$('#side');side.innerHTML='';
   const pend=p.paras.map((_,i)=>i).filter(i=>isPend(p,i));
   if(p.paras.length){
-    const bar=el('div','bar'),un=el('button','','Undo');un.disabled=!ustack.length;un.onclick=undo;
+    const bar=el('div','bar'),un=el('button','','Undo'),re=el('button','','Redo');un.disabled=!(ustack.length||data.pages.some(q=>q.paras.some(x=>x.status)));un.onclick=undo;re.disabled=!rstack.length;re.onclick=redo;un.title='Undo (Z)';re.title='Redo (Y)';
     const eb=el('button',p.est?'on':'','Estimate');eb.title='Ignore the PDF text layer on this page and estimate positions (E)';eb.onclick=toggleEst;
-    bar.append(el('span','',pend.length+' left on this page'),eb,un);side.append(bar);
+    bar.append(el('span','',pend.length+' left on this page'),eb,un,re);side.append(bar);
   }
   const q=el('div','q');side.append(q);
   pend.slice(0,4).forEach((i,k)=>{
@@ -836,6 +856,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='a'&&t>-1)setS(t,'ok');
   else if(e.key==='x'&&t>-1){e.preventDefault();setS(t,'wrong')}
   else if(e.key==='z')undo();
+  else if(e.key==='y'||e.key==='Z')redo();
   else if(e.key==='r')rotate();
   else if(e.key==='e')toggleEst();
   else if(e.key==='n'&&((p.paras.length&&t<0)||p.blank))go(cur+1);
