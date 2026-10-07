@@ -107,7 +107,7 @@ header .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellips
 .tb{border-collapse:collapse;width:100%;font-size:13px}
 .tb td{border:1px solid #ccc;padding:4px 6px;vertical-align:top}
 #ch{position:absolute;background:rgba(255,215,0,.38);border:2px solid #d9a600;pointer-events:none;display:none}
-.tb td.act{background:transparent;outline:2px solid #0a5fd0;outline-offset:-2px}
+.tb td.act{background:#dbeafe;outline:2px solid #0a5fd0}
 .cl{font-size:12px;color:#555;margin-top:4px}
 .tb input{width:100%;min-width:60px;box-sizing:border-box;padding:4px;border:1px solid #999;font:inherit}
 
@@ -129,6 +129,9 @@ footer span{font-size:13px}
 @media(max-width:800px),(pointer:coarse) and (orientation:portrait){
 header{grid-template-columns:1fr;gap:4px}header .t{grid-column:auto;order:-1;max-width:none;font-size:17px;text-align:center}
 .hl,.hr{justify-content:center;flex-wrap:wrap}header button{width:60px}#sv{display:none}}
+#eh{position:absolute;left:0;right:0;height:0;border-top:2px dashed #e07b00;pointer-events:none;display:none;z-index:3}
+#eh span{position:absolute;right:4px;top:-20px;background:#fff3e0;color:#9a5200;border:1px solid #e0b070;font-size:11px;padding:1px 6px;border-radius:3px}
+#wrap.est{cursor:crosshair}
 </style>
 </head>
 <body>
@@ -150,7 +153,7 @@ header{grid-template-columns:1fr;gap:4px}header .t{grid-column:auto;order:-1;max
 </header>
 <div id="map" class="hide"></div>
 <main class="hide" id="mn">
-  <div id="src"><div id="wrap"><canvas id="cv"></canvas><div id="hl"></div><div id="ch"></div></div></div>
+  <div id="src"><div id="wrap"><canvas id="cv"></canvas><div id="hl"></div><div id="ch"></div><div id="eh"><span></span></div></div></div>
   <div id="side"></div>
 </main>
 <footer class="hide" id="ft">
@@ -389,7 +392,7 @@ async function loadPage(){
     tcCache[pn]=tc;
   }
   if(t!==tok)return;
-  pageInfo={pn,vp:pg.getViewport({scale:s,rotation:rot}),tc,pos:locateAll(tc,data.pages[cur].paras)};
+  pageInfo={pn,vp:pg.getViewport({scale:s,rotation:rot}),tc,pos:data.pages[cur].est?data.pages[cur].paras.map(()=>null):locateAll(tc,data.pages[cur].paras)};
   focusPara(!!keep);
   await task.promise.catch(()=>{});
 }
@@ -594,13 +597,68 @@ function colourCells(cells,bx){
     if(res.nd||res.pdfOnly.length)td.title='PDF reads: '+(b.pdf||'');
   });
 }
+/* ---------- estimate mode: pages with no usable text layer (poor scans) ----------
+   Position is predicted from sentence length + known anchors (taps, deliberate scrolls, text-matched
+   sentences). Anchors are stored as page fractions, so zoom does not matter. */
+let curEst=null,progUntil=0,userMoved=false,estTarget=0;
+const EST_REF=.35;
+function predictFy(paras,anch,i){
+  if(anch[i])return{fy:anch[i].fy,fx:anch[i].fx,src:'set'};
+  const w=paras.map(x=>x.text.includes(' | ')?60:25+x.text.length),cw=[0];
+  w.forEach((v,k)=>cw.push(cw[k]+v));
+  const mid=k=>cw[k]+w[k]/2,T=cw[w.length],top=.06,bot=.94;
+  const pts=Object.keys(anch).map(Number).sort((a,b)=>a-b).map(k=>({k,y:anch[k].fy,x:anch[k].fx}));
+  const bf=[...pts].reverse().find(a=>a.k<i),af=pts.find(a=>a.k>i);
+  let fy,src;
+  if(bf&&af){fy=bf.y+(af.y-bf.y)*(mid(i)-mid(bf.k))/(mid(af.k)-mid(bf.k));src='between'}
+  else{
+    const def=(bot-top)/T;let sl=def;
+    if(pts.length>=2){const f=pts[0],l=pts[pts.length-1],q=(l.y-f.y)/(mid(l.k)-mid(f.k));if(q>0)sl=Math.max(def*.4,Math.min(def*2.5,q))}
+    if(bf){fy=bf.y+(mid(i)-mid(bf.k))*sl;src='extrap'}
+    else if(af){fy=af.y-(mid(af.k)-mid(i))*sl;src='extrap'}
+    else{fy=top+mid(i)*def;src='page'}
+  }
+  return{fy:Math.max(.02,Math.min(.98,fy)),fx:(bf||af||{}).x,src};
+}
+function autoAnch(pi,p){
+  const a={},c=$('#cv');let last=-1;
+  p.paras.forEach((x,k)=>{
+    const r=pi.pos[k];if(!r||x.text.length<25)return;
+    const q=rectOf(pi,pi.tc.items.slice(pi.tc.map[r.s],pi.tc.map[Math.min(r.e,pi.tc.map.length-1)]+1));
+    if(!q)return;const fy=(q.y+q.h/2)/c.clientHeight;
+    if(fy>last){a[k]={fy,fx:(q.x+q.w/2)/c.clientWidth};last=fy}
+  });
+  return a;
+}
+function setAnch(p,i,fy,fx){
+  if(!(fy>=0&&fy<=1))return false;
+  const A=p.anch||{},ks=Object.keys(A).map(Number),
+    b=ks.filter(k=>k<i).sort((a,c)=>c-a)[0],a=ks.filter(k=>k>i).sort((a,c)=>a-c)[0];
+  if((b!==undefined&&fy<A[b].fy-.01)||(a!==undefined&&fy>A[a].fy+.01)){$('#sv').textContent='Ignored: that position is out of order';return false}
+  (p.anch=p.anch||{})[i]={fy,fx};save();return true;
+}
+function learn(i){
+  const p=data.pages[cur];
+  if(!curEst||curEst.i!==i||!userMoved||(p.anch&&p.anch[i]))return;
+  const sc=$('#src'),w=$('#wrap'),c=$('#cv');
+  setAnch(p,i,(sc.scrollTop+sc.clientHeight*EST_REF-w.offsetTop)/c.clientHeight,
+    c.clientWidth>sc.clientWidth+4?(sc.scrollLeft+sc.clientWidth/2-w.offsetLeft)/c.clientWidth:undefined);
+}
+$('#src').addEventListener('scroll',()=>{if(curEst&&Date.now()>progUntil&&Math.abs($('#src').scrollTop-estTarget)>40)userMoved=true});
+$('#wrap').addEventListener('click',e=>{
+  if(!curEst||!data)return;
+  const b=$('#cv').getBoundingClientRect(),fy=(e.clientY-b.top)/b.height,fx=(e.clientX-b.left)/b.width;
+  if(setAnch(data.pages[cur],curEst.i,fy,fx)){curEst.fy=fy;$('#eh').style.top=fy*b.height+'px';$('#eh').firstChild.textContent='position set'}
+});
+
 function focusPara(noScroll){
   const p=data.pages[cur],pi=pageInfo,hl=$('#hl');
   if(!pi||pi.pn!==p.page)return;
   const i=topIdx(p);
   if(i<0){hl.style.display='none';return}
-  const r=pi.pos[i],c=$('#cv');
-  let top,bot=null;
+  const r=pi.pos[i],c=$('#cv'),estMode=!r;
+  let top,bot=null,pr=null;
+  $('#eh').style.display='none';curEst=null;$('#wrap').classList.toggle('est',estMode);
   if(r){
     const k0=pi.tc.map[r.s],k1=pi.tc.map[r.e];
     let mn=Infinity,mx=-Infinity;
@@ -613,10 +671,20 @@ function focusPara(noScroll){
     }
     if(isFinite(mn)){top=mn-3;bot=mx+3}
   }
+  if(estMode){
+    pr=predictFy(p.paras,Object.assign(autoAnch(pi,p),p.anch||{}),i);
+    top=pr.fy*c.clientHeight;curEst={i,fy:pr.fy,fx:pr.fx};
+    const eh=$('#eh');eh.style.top=top+'px';eh.style.display='block';
+    eh.firstChild.textContent=pr.src==='set'?'position set':(pr.src==='page'||pr.src==='extrap'?'rough estimate · tap the PDF to set':'estimated · tap the PDF to set');
+  }
   if(top===undefined)top=c.clientHeight*(i/Math.max(1,p.paras.length));
   if(bot!==null){hl.style.top=top+'px';hl.style.height=Math.max(8,bot-top)+'px';hl.style.display='block'}
   else hl.style.display='none';
-  if(!noScroll)$('#src').scrollTo({top:Math.max(0,$('#wrap').offsetTop+top-70),behavior:'smooth'});
+  if(!noScroll){
+    const sc=$('#src'),wp=$('#wrap'),off=estMode?sc.clientHeight*EST_REF:70,o={top:Math.max(0,wp.offsetTop+top-off),behavior:'smooth'};
+    if(estMode&&pr&&pr.fx!=null&&c.clientWidth>sc.clientWidth+4)o.left=Math.max(0,wp.offsetLeft+pr.fx*c.clientWidth-sc.clientWidth/2);
+    progUntil=Date.now()+1100;userMoved=false;estTarget=o.top;sc.scrollTo(o);
+  }
   drawCell();
   colourPara(i);
 }
@@ -637,7 +705,7 @@ let ustack=[];
 const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed});
 function setS(i,s){
   const p=data.pages[cur],x=p.paras[i];
-  if(s==='ok'){ustack.push({pg:p.page,i,prev:snap(x)});x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
+  if(s==='ok'){learn(i);ustack.push({pg:p.page,i,prev:snap(x)});x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
   else{if(x.status!=='wrong')ustack.push({pg:p.page,i,prev:snap(x)});x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
 }
 function okStep(i){
@@ -659,13 +727,13 @@ function saveFix(i){
   if(ta)x.fix=ta.value;
   if(!x.fix.trim()){alert('Type the correct text first.');return}
   if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
-  ustack.push({pg:p.page,i,prev:snap(x)});
+  learn(i);ustack.push({pg:p.page,i,prev:snap(x)});
   x.fixed=true;edIdx=null;afterChange(false);
 }
 function undo(){
   const u=ustack.pop();if(!u)return;
   const k=data.pages.findIndex(q=>q.page===u.pg);if(k<0)return;
-  const x=data.pages[k].paras[u.i];Object.assign(x,u.prev);
+  const x=data.pages[k].paras[u.i];Object.assign(x,u.prev);if(data.pages[k].anch)delete data.pages[k].anch[u.i];
   cur=k;show();
   edIdx=(x.status==='wrong'&&!x.fixed)?u.i:null;
   save();drawMap();renderSide(x.status==='wrong');focusPara();
@@ -677,7 +745,8 @@ function renderSide(focusTa){
   const pend=p.paras.map((_,i)=>i).filter(i=>isPend(p,i));
   if(p.paras.length){
     const bar=el('div','bar'),un=el('button','','Undo');un.disabled=!ustack.length;un.onclick=undo;
-    bar.append(el('span','',pend.length+' left on this page'),un);side.append(bar);
+    const eb=el('button',p.est?'on':'','Estimate');eb.title='Ignore the PDF text layer on this page and estimate positions (E)';eb.onclick=toggleEst;
+    bar.append(el('span','',pend.length+' left on this page'),eb,un);side.append(bar);
   }
   const q=el('div','q');side.append(q);
   pend.slice(0,4).forEach((i,k)=>{
@@ -720,7 +789,7 @@ function renderSide(focusTa){
     b.onclick=()=>{p.blank=!p.blank;save();drawMap();renderSide()};q.append(b);
   }else if(!pend.length){
     const f=el('div','fin','Page verified');
-    if(cur<data.pages.length-1){const n=el('button','on','Next page');n.style.marginTop='8px';n.onclick=()=>go(cur+1);f.append(el('br'),n)}
+    if(cur<data.pages.length-1){const n=el('button','on','Next page (N)');n.style.marginTop='8px';n.onclick=()=>go(cur+1);f.append(el('br'),n)}
     q.append(f);
   }
   const m=el('textarea');m.id='miss';m.value=p.missing;
@@ -744,7 +813,8 @@ $('#wc').onclick=()=>{wc=wc==='err'?'all':wc==='all'?'off':'err';try{localStorag
 wcLbl();
 $('#zi').onclick=()=>zoomTo(zoom+.2);
 $('#zo').onclick=()=>zoomTo(zoom-.2);
-const rotate=()=>{const p=data.pages[cur];p.rot=((p.rot||0)+90)%360;save();loadPage()};
+const toggleEst=()=>{const p=data.pages[cur];p.est=!p.est;p.anch=p.anch||{};save();loadPage();renderSide()};
+const rotate=()=>{const p=data.pages[cur];p.rot=((p.rot||0)+90)%360;p.anch={};save();loadPage()};
 $('#rt').onclick=rotate;
 $('#nw').onclick=()=>location.reload();
 window.onresize=()=>{if(data)loadPage()};
@@ -766,6 +836,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='x'&&t>-1){e.preventDefault();setS(t,'wrong')}
   else if(e.key==='z')undo();
   else if(e.key==='r')rotate();
+  else if(e.key==='e')toggleEst();
+  else if(e.key==='n'&&((p.paras.length&&t<0)||p.blank))go(cur+1);
   else if(e.key==='d'){dbg=!dbg;drawCell()}
   else if(e.key==='Tab'&&t>-1&&p.paras[t].text.includes(' | ')){e.preventDefault();stepCell(e.shiftKey?-1:1)}
 });
