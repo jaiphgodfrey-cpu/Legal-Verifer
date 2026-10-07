@@ -31,7 +31,7 @@ main{flex:1;display:flex;min-height:0}
 #src canvas{background:#fff;border:1px solid #aaa;max-width:none;display:block}
 #hl{position:absolute;left:0;right:0;background:rgba(255,215,0,.28);border-top:2px solid #d9a600;border-bottom:2px solid #d9a600;pointer-events:none;display:none}
 #side{flex:1;overflow:auto;padding:12px;border-left:1px solid #bbb;max-width:760px}
-.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:600}
+.bar{display:flex;justify-content:flex-start;gap:6px;align-items:center;margin-bottom:8px;font-weight:600}.bar span{margin-right:auto}
 details{margin-bottom:10px;border:1px solid #ccc;border-radius:3px;padding:6px 10px;background:#fafafa}
 summary{cursor:pointer}
 .dl{padding:5px 6px;border-top:1px solid #e4e4e4;cursor:pointer;font-size:13px}
@@ -177,10 +177,10 @@ function normPage(p){
   const paras=p.paragraphs||String(p.text||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
   return{page:Number(p.page),paras:paras.map(mkPara),missing:p.missing||'',blank:!!p.blank,rot:Number(p.rotation)||0};
 }
-const done=p=>p.paras.length?p.paras.every(x=>x.status==='ok'||(x.status==='wrong'&&x.fixed&&x.fix.trim())):p.blank;
+const done=p=>p.paras.length?p.paras.every(x=>x.status==='ok'||(x.status==='wrong'&&x.fixed)):p.blank;
 const flagged=p=>p.paras.some(x=>x.status==='wrong')||p.missing.trim()!=='';
 const fp=d=>d.pages.length+'|'+d.pages.map(p=>p.paras.length).join(',')+'|'+((d.pages[0]&&d.pages[0].paras[0]&&d.pages[0].paras[0].text)||'').slice(0,60);
-const isPend=(p,i)=>{const x=p.paras[i];return !x.status||(x.status==='wrong'&&(edIdx===i||!x.fixed||!x.fix.trim()))};
+const isPend=(p,i)=>{const x=p.paras[i];return !x.status||(x.status==='wrong'&&(edIdx===i||!x.fixed))};
 const topIdx=p=>p.paras.findIndex((_,i)=>isPend(p,i));
 
 /* ---------- offline PDF engine (embedded) ---------- */
@@ -727,8 +727,8 @@ function mergeRow(i){
 function saveFix(i){
   const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
   if(ta)x.fix=ta.value;
-  if(!x.fix.trim()){alert('Type the correct text first.');return}
-  if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
+  if(!x.fix.trim()){if(!confirm('Delete this sentence? It will be left out of the result.'))return;x.fix=''}
+  else if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
   learn(i);pushU(p.page,i,x);
   x.fixed=true;edIdx=null;afterChange(false);
 }
@@ -891,7 +891,7 @@ $('#exc').onclick=()=>{
     instrument:data.instrument,source:pdfName,exported:new Date().toISOString(),
     complete:!bad.length,pages_total:total,pages_included:okp.length,pages_not_verified:bad,
     pages:okp.map(p=>{
-      const o={page:p.page,paragraphs:p.paras.map(x=>x.status==='ok'?x.text:(x.status==='wrong'&&x.fixed?x.fix:null)).filter(t=>t!==null)};
+      const o={page:p.page,paragraphs:p.paras.map(x=>x.status==='ok'?x.text:(x.status==='wrong'&&x.fixed?x.fix:null)).filter(t=>t!==null&&String(t).trim()!=='')};
       if(p.missing&&p.missing.trim())o.missing=p.missing;
       if(p.blank)o.blank=true;
       return o;
