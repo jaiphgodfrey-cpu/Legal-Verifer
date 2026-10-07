@@ -209,6 +209,7 @@ const stamp=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit
 let pdfBuf=null,curId='',fh=null,wt=null,b64c=null;
 
 function save(){
+  if(ustack.length>300)ustack.splice(0,ustack.length-300);
   data.savedAt=new Date().toISOString();
   dbPut('p',{id:curId,instrument:data.instrument,pdfName,savedAt:data.savedAt,ok:data.pages.filter(done).length,total:data.pages.length,data})
     .then(()=>{$('#sv').textContent='Saved '+stamp()})
@@ -241,7 +242,7 @@ $('#fs').onclick=async()=>{
 /* ---------- opening ---------- */
 async function start(buf,name,d,handle){
   try{await libReady}catch(e){alert('The built-in PDF reader could not start in this browser. Please use a recent Chrome, Edge, Firefox or Safari.');return}
-  pdfBuf=buf;pdfName=name;data=d;curId=d.instrument;fh=handle||null;b64c=null;
+  pdfBuf=buf;pdfName=name;data=d;ustack=d.ustack=Array.isArray(d.ustack)?d.ustack:[];curId=d.instrument;fh=handle||null;b64c=null;
   try{pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise}
   catch(e){alert('Could not open the PDF.');return}
   dbPut('f',buf,curId).catch(()=>{});
