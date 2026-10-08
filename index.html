@@ -136,6 +136,7 @@ header{grid-template-columns:1fr;gap:4px}header .t{grid-column:auto;order:-1;max
 #eh{position:absolute;left:0;right:0;height:0;border-top:0;pointer-events:none;display:none;z-index:3}
 #eh span{display:none}
 #wrap.est{cursor:crosshair}
+.rc button:disabled{opacity:.4}
 </style>
 </head>
 <body>
@@ -183,7 +184,10 @@ function normPage(p){
 }
 const done=p=>p.paras.length?p.paras.every(x=>x.status==='ok'||(x.status==='wrong'&&x.fixed)):p.blank;
 const flagged=p=>p.paras.some(x=>x.status==='wrong')||p.missing.trim()!=='';
-const fp=d=>d.pages.length+'|'+d.pages.map(p=>p.paras.filter(x=>!x.added).length).join(',')+'|'+((d.pages[0]&&(d.pages[0].paras.find(x=>!x.added)||{}).text)||'').slice(0,60);
+/* w = how many original extractor rows a row stands for (join: sum, split: 1 + 0), o = original text of its first part */
+const W=x=>x.added?0:(x.w===undefined?1:x.w);
+const ot=x=>x?(x.o!==undefined?x.o:x.text):'';
+const fp=d=>d.pages.length+'|'+d.pages.map(p=>p.paras.reduce((n,x)=>n+W(x),0)).join(',')+'|'+(ot(d.pages[0]&&d.pages[0].paras.find(x=>W(x)>0))||'').slice(0,60);
 const isPend=(p,i)=>{const x=p.paras[i];return !x.status||(x.status==='wrong'&&(edIdx===i||!x.fixed))};
 const topIdx=p=>p.paras.findIndex((_,i)=>isPend(p,i));
 
@@ -707,7 +711,7 @@ function afterChange(focusTa){
 }
 
 let ustack=[],rstack=[];
-const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed,cmap:x.cmap});
+const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed,cmap:x.cmap,text:x.text,mt:x.mt});
 let fillCol=-1,focusJ=-1,actJ=0;
 const blankFix=f=>String(f).split(' | ').every(c=>!c.trim());
 const cellsOf=x=>(x.status==='wrong'&&x.fix?x.fix:x.text).split(' | ');
@@ -738,6 +742,66 @@ function mergeRow(i){
   pushU(p.page,i,x);
   x.status='wrong';x.fix=x.text.split(' | ').join(' ').replace(/\s+/g,' ').trim();x.fixed=true;edIdx=null;afterChange(false);
 }
+/* ---------- manual structure tools: nothing here depends on the extractor's table / sentence guesses ---------- */
+const sbtn=(txt,title,fn)=>{const b=el('button','',txt);b.type='button';b.title=title;b.onclick=fn;return b};
+function relocate(){
+  const p=data.pages[cur];
+  if(!pageInfo||pageInfo.pn!==p.page)return;
+  pageInfo.pos=p.est?p.paras.map(()=>null):locateAll(pageInfo.tc,p.paras);
+  pageInfo.cb={};pageInfo.cc={};acKey='';
+}
+/* join row a and row a+1 into ONE sentence (works for any rows, table or not) */
+function joinAt(a){
+  const p=data.pages[cur],A=p.paras[a],B=p.paras[a+1];
+  if(!A||!B){toast('There is no sentence there to join with on this page.');return}
+  if(A.added||B.added){toast('Rows you added by hand cannot be joined.');return}
+  const gone=x=>x.status==='wrong'&&x.fixed&&blankFix(x.fix);
+  if(gone(A)||gone(B)){toast('One of these sentences was deleted. Undo that first.');return}
+  const flat=t=>String(t).split(' | ').join(' ').replace(/\s+/g,' ').trim();
+  const eff=x=>x.status==='wrong'?x.fix:x.text;
+  const edited=x=>x.status==='wrong'&&String(x.fix).trim()!==''&&x.fix.trim()!==x.text.trim();
+  const keep=edited(A)||edited(B);
+  const row={text:flat(A.text+' '+B.text),status:null,fix:'',fixed:false,w:W(A)+W(B),o:ot(A),mf:(A.mf||[A.text]).concat(B.mf||[B.text])};
+  if(keep){row.status='wrong';row.fix=flat(eff(A)+' '+eff(B))}
+  const pg=p.page,r=applyOp({pg,op:'multi',ops:[{pg,op:'del',at:a},{pg,op:'del',at:a},{pg,op:'add',at:a,row}]});
+  if(!r)return;
+  ustack.push(r.inv);rstack.length=0;
+  edIdx=keep?a:null;relocate();
+  save();drawMap();renderSide(keep);focusPara();
+  toast('Joined into one sentence. Check it against the PDF. Undo (Z) separates them again.');
+}
+/* cut the sentence being edited in two, at the cursor */
+function splitRow(i){
+  const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
+  if(!ta||x.added)return;
+  const v=ta.value,at=ta.selectionStart,a=v.slice(0,at).trim(),b=v.slice(at).trim();
+  if(!a||!b){toast('Tap inside the text where the second sentence begins, then press Split here.');return}
+  const o=ot(x),mk=(t,w)=>({text:t,status:null,fix:'',fixed:false,w,o,sf:x.text});
+  const pg=p.page,r=applyOp({pg,op:'multi',ops:[{pg,op:'del',at:i},{pg,op:'add',at:i,row:mk(a,W(x))},{pg,op:'add',at:i+1,row:mk(b,0)}]});
+  if(!r)return;
+  ustack.push(r.inv);rstack.length=0;
+  edIdx=null;relocate();
+  save();drawMap();renderSide(false);focusPara();
+  toast('Split into two sentences. Check the first one. Undo (Z) puts it back.');
+}
+/* mark where a table cell starts, inside the text box */
+function cellBreak(){
+  const ta=$('#fixta');if(!ta)return;
+  const v=ta.value,s0=ta.selectionStart,e0=ta.selectionEnd,l=v.slice(0,s0).replace(/\s+$/,''),r=v.slice(e0).replace(/^\s+/,'');
+  ta.value=l+' | '+r;const c=l.length+3;ta.focus();ta.setSelectionRange(c,c);ta.dispatchEvent(new Event('input'));
+}
+/* turn the text being edited into a table row; every " | " is a cell boundary */
+function makeTable(i){
+  const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
+  if(!ta||x.added)return;
+  const v=ta.value.replace(/\s*\|\s*/g,' | ').replace(/\s+/g,' ').trim();
+  if(v.split(' | ').length<2){toast('Add at least one cell break first: tap Cell break where each new cell starts.');return}
+  pushU(p.page,i,x);
+  if(x.o===undefined)x.o=x.text;
+  x.mt=x.mt||x.text;x.text=v;x.status=null;x.fix='';x.fixed=false;delete x.cmap;
+  edIdx=null;relocate();afterChange(false);
+  toast('Now a table row. Check each cell against the PDF. Undo (Z) turns it back.');
+}
 function saveFix(i){
   const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
   if(ta)x.fix=ta.value;
@@ -745,6 +809,7 @@ function saveFix(i){
     if(x.added){discardRow(i);return}
     if(!confirm('Delete this sentence? It will be left out of the result.'))return;x.fix=''}
   else if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
+  if(!x.text.includes(' | ')&&String(x.fix).includes(' | ')&&!confirm('The text contains " | " cell breaks but this is not a table row. Press Cancel, then use Make table to turn it into cells. Save as plain text anyway?'))return;
   learn(i);pushU(p.page,i,x);
   x.fixed=true;edIdx=null;afterChange(fillCol>=0);
 }
@@ -795,6 +860,7 @@ function applyOp(o){
   const p=data.pages[k];
   if(o.op==='add'){insRow(k,o.at,o.row);return{k,i:o.at,x:o.row,inv:{pg:o.pg,op:'del',at:o.at}}}
   if(o.op==='del'){const row=delRow(k,o.at);return{k,i:Math.min(o.at,p.paras.length-1),x:null,inv:{pg:o.pg,op:'add',at:o.at,row}}}
+  if(o.op==='multi'){let r=null;const invs=[];o.ops.forEach(q=>{const a=applyOp(q);if(a){invs.unshift(a.inv);r=a}});if(!r)return null;return{k:r.k,i:r.i,x:r.x,inv:{pg:o.pg,op:'multi',ops:invs}}}
   const its=o.items||[{i:o.i,set:o.prev||o.next}],inv=[];let last=null;
   its.forEach(it=>{const x=p.paras[it.i];if(!x)return;inv.push({i:it.i,set:snap(x)});Object.assign(x,it.set);if(p.anch)delete p.anch[it.i];last={i:it.i,x}});
   if(!last)return null;
@@ -846,7 +912,12 @@ function renderSide(focusTa){
       if(isT){ok.id='okb';ok.textContent='Correct: next cell';
         const ar=el('button','','Accept row'),mg=el('button','','One sentence');
         ar.onclick=()=>setS(i,'ok');mg.onclick=()=>mergeRow(i);r.append(ar,mg)}
-      if(!x.added)d.append(r);
+      if(!x.added){
+        d.append(r);
+        const sr=el('div','rc'),pj=sbtn('Join previous','Join this sentence to the one above it (Shift+M)',()=>joinAt(i-1)),nj=sbtn('Join next','Join this sentence to the one below it (M)',()=>joinAt(i));
+        pj.disabled=i<1||!!p.paras[i-1].added;nj.disabled=i>=p.paras.length-1||!!p.paras[i+1].added;
+        sr.append(el('b','','Structure:'),pj,nj);d.append(sr);
+      }
       if(x.status==='wrong'){
         let ta;
         if(isT){
@@ -875,9 +946,16 @@ function renderSide(focusTa){
           cols.append(el('b','','Column, every row on this page:'),nb('+ left','Add an empty column to the left of the cell you last clicked',()=>colAll(i,gj())),nb('+ right','Add an empty column to the right of the cell you last clicked',()=>colAll(i,gj()+1)));
           const tools=el('div');tools.append(rows,cols);ta=el('div');ta.append(w,tools);
         }else{
-          ta=el('textarea');ta.id='fixta';ta.value=x.fix||x.text;
-          ta.oninput=()=>{x.fix=ta.value;save();drawMap()};
-          ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();saveFix(i)}};
+          const t0=el('textarea');t0.id='fixta';t0.value=x.fix||x.text;
+          t0.oninput=()=>{x.fix=t0.value;save();drawMap()};
+          t0.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();saveFix(i)}};
+          ta=el('div');ta.append(t0);
+          if(!x.added){const tl2=el('div','rc');
+            tl2.append(el('b','','At the cursor:'),
+              sbtn('Split here','Cut this text into two sentences at the cursor',()=>splitRow(i)),
+              sbtn('Cell break','Insert \" | \" to mark where a table cell starts',cellBreak),
+              sbtn('Make table','Turn this text into a table row; each \" | \" is a cell boundary',()=>makeTable(i)));
+            ta.append(tl2)}
         }
         const sb=el('button','on','Save');sb.style.marginTop='8px';sb.onclick=()=>saveFix(i);
         d.append(ta,sb);
@@ -946,6 +1024,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='e')toggleEst();
   else if(e.key==='n'&&((p.paras.length&&t<0)||p.blank))go(cur+1);
   else if(e.key==='d'){dbg=!dbg;drawCell()}
+  else if(e.key==='m'&&t>-1)joinAt(t);
+  else if(e.key==='M'&&t>0)joinAt(t-1);
   else if(e.key==='Tab'&&t>-1&&p.paras[t].text.includes(' | ')){e.preventDefault();stepCell(e.shiftKey?-1:1)}
 });
 
@@ -956,7 +1036,7 @@ $('#ex').onclick=()=>{
     pages_total:total,pages_verified:ok,
     pages:data.pages.map(p=>({
       page:p.page,verified:done(p),blank:p.blank,rotation:p.rot||0,missing:p.missing,
-      paragraphs:p.paras.map(x=>({text:x.text,status:x.status,fix:x.fix,fixed:!!x.fixed,added:!!x.added,final:x.status==='wrong'?(x.fixed?x.fix:null):x.status==='ok'?x.text:null}))
+      paragraphs:p.paras.map(x=>({text:x.text,status:x.status,fix:x.fix,fixed:!!x.fixed,added:!!x.added,merged_from:x.mf,split_from:x.sf,made_table_from:x.mt,final:x.status==='wrong'?(x.fixed?x.fix:null):x.status==='ok'?x.text:null}))
     }))
   };
   let base=(pdfName.replace(/\.pdf$/i,'')||data.instrument).replace(/[^\w\-]+/g,'_');
