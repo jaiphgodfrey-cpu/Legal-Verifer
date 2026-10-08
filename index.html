@@ -110,6 +110,10 @@ header .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellips
 .tb td.act{background:#dbeafe;outline:2px solid #0a5fd0}
 .cl{font-size:12px;color:#555;margin-top:4px}
 .tb input{width:100%;min-width:60px;box-sizing:border-box;padding:4px;border:1px solid #999;font:inherit}
+.ct{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}.ct button{font-size:11px;padding:1px 6px;line-height:1.5}
+.rc{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:#444}.rc b{font-weight:600;margin-right:2px}.rc button{font-size:12px;padding:3px 9px}
+.newrow{font-size:12px;color:#0a5fd0;border-left:3px solid #0a5fd0;padding:2px 8px;margin-bottom:6px}
+#toast{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;z-index:100;max-width:90vw;display:none;text-align:center}
 
 /* v9 toolbar, zoom, compact bars */
 header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:4px 10px;min-height:40px}
@@ -179,7 +183,7 @@ function normPage(p){
 }
 const done=p=>p.paras.length?p.paras.every(x=>x.status==='ok'||(x.status==='wrong'&&x.fixed)):p.blank;
 const flagged=p=>p.paras.some(x=>x.status==='wrong')||p.missing.trim()!=='';
-const fp=d=>d.pages.length+'|'+d.pages.map(p=>p.paras.length).join(',')+'|'+((d.pages[0]&&d.pages[0].paras[0]&&d.pages[0].paras[0].text)||'').slice(0,60);
+const fp=d=>d.pages.length+'|'+d.pages.map(p=>p.paras.filter(x=>!x.added).length).join(',')+'|'+((d.pages[0]&&(d.pages[0].paras.find(x=>!x.added)||{}).text)||'').slice(0,60);
 const isPend=(p,i)=>{const x=p.paras[i];return !x.status||(x.status==='wrong'&&(edIdx===i||!x.fixed))};
 const topIdx=p=>p.paras.findIndex((_,i)=>isPend(p,i));
 
@@ -692,7 +696,7 @@ function focusPara(noScroll){
 
 /* ---------- side panel ---------- */
 function show(){
-  edIdx=null;
+  edIdx=null;fillCol=-1;focusJ=-1;
   drawMap();loadPage();renderSide();
   $('#src').scrollTop=0;
 }
@@ -703,15 +707,25 @@ function afterChange(focusTa){
 }
 
 let ustack=[],rstack=[];
-const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed});
+const snap=x=>({status:x.status,fix:x.fix,fixed:x.fixed,cmap:x.cmap});
+let fillCol=-1,focusJ=-1,actJ=0;
+const blankFix=f=>String(f).split(' | ').every(c=>!c.trim());
+const cellsOf=x=>(x.status==='wrong'&&x.fix?x.fix:x.text).split(' | ');
+function toast(m){let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';document.body.append(t)}t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},3500)}
+/* rows can be inserted/removed; keep estimate anchors and cached positions in step */
+function shiftAnch(p,at,d){if(!p.anch)return;const o={};for(const k of Object.keys(p.anch)){const n=+k;if(d>0)o[n>=at?n+1:n]=p.anch[k];else{if(n===at)continue;o[n>at?n-1:n]=p.anch[k]}}p.anch=o}
+function insRow(k,at,row){const p=data.pages[k];p.paras.splice(at,0,row);shiftAnch(p,at,1);if(pageInfo&&pageInfo.pn===p.page){pageInfo.pos.splice(at,0,null);pageInfo.cb={};pageInfo.cc={}}acKey=''}
+function delRow(k,at){const p=data.pages[k],row=p.paras.splice(at,1)[0];shiftAnch(p,at,-1);if(pageInfo&&pageInfo.pn===p.page){pageInfo.pos.splice(at,1);pageInfo.cb={};pageInfo.cc={}}acKey='';return row}
 function pushU(pg,i,x){ustack.push({pg,i,prev:snap(x)});rstack.length=0}
 function setS(i,s){
   const p=data.pages[cur],x=p.paras[i];
-  if(s==='ok'){learn(i);pushU(p.page,i,x);x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
+  if(s==='ok'&&x.added)return;
+  if(s==='ok'){fillCol=-1;learn(i);pushU(p.page,i,x);x.status='ok';x.fix='';x.fixed=false;edIdx=null;afterChange(false)}
   else{if(x.status!=='wrong')pushU(p.page,i,x);x.status='wrong';x.fix=x.fix||x.text;x.fixed=false;edIdx=i;afterChange(true)}
 }
 function okStep(i){
   const p=data.pages[cur],x=p.paras[i],n=x.text.split(' | ').length;
+  if(x.added)return;
   if(n>1&&seen.size<n&&acKey===p.page+':'+i){
     let nx=-1;for(let j=ac+1;j<n;j++)if(!seen.has(j)){nx=j;break}
     if(nx<0)for(let j=0;j<n;j++)if(!seen.has(j)){nx=j;break}
@@ -727,10 +741,70 @@ function mergeRow(i){
 function saveFix(i){
   const p=data.pages[cur],x=p.paras[i],ta=$('#fixta');
   if(ta)x.fix=ta.value;
-  if(!x.fix.trim()){if(!confirm('Delete this sentence? It will be left out of the result.'))return;x.fix=''}
+  if(blankFix(x.fix)){
+    if(x.added){discardRow(i);return}
+    if(!confirm('Delete this sentence? It will be left out of the result.'))return;x.fix=''}
   else if(x.fix.trim()===x.text.trim()&&!confirm('The correction is identical to the original. Save anyway?'))return;
   learn(i);pushU(p.page,i,x);
-  x.fixed=true;edIdx=null;afterChange(false);
+  x.fixed=true;edIdx=null;afterChange(fillCol>=0);
+}
+function discardRow(i){
+  const p=data.pages[cur],row=delRow(cur,i);
+  ustack.push({pg:p.page,op:'add',at:i,row});rstack.length=0;
+  edIdx=null;save();drawMap();renderSide();focusPara();
+}
+function addRow(i,below){
+  const p=data.pages[cur],n=cellsOf(p.paras[i]).length,blank=Array(n).fill('').join(' | ');
+  const at=below?i+1:i;
+  insRow(cur,at,{text:blank,status:'wrong',fix:blank,fixed:false,added:true});
+  ustack.push({pg:p.page,op:'del',at});rstack.length=0;
+  if(!below){edIdx=at;focusJ=0}
+  save();drawMap();renderSide(!below);focusPara();
+  toast(below?'Row added below. Finish this row first, then fill the new one.':'Row added above. Fill it in, then continue.');
+}
+function mapOf(x){
+  const c=cellsOf(x),n0=x.text.split(' | ').length;
+  return Array.isArray(x.cmap)&&x.cmap.length===c.length?x.cmap:(c.length===n0?c.map((_,j)=>j):null);
+}
+function colAll(i,pos){
+  const p=data.pages[cur],base=p.paras[i],n0=base.text.split(' | ').length,list=[];let kept=0;
+  const bm=mapOf(base)||cellsOf(base).map((_,j)=>j);
+  let posO=n0;for(let k=pos;k<bm.length;k++)if(bm[k]>=0){posO=bm[k];break}   /* insert before this original cell */
+  p.paras.forEach((x,r)=>{
+    if(!x.text.includes(' | ')||x.text.split(' | ').length!==n0)return;
+    if(r!==i){
+      if(x.status==='ok'){kept++;return}
+      if(x.status==='wrong'&&x.fixed&&blankFix(x.fix))return;
+    }
+    const c=cellsOf(x),m0=r===i?bm:mapOf(x);if(!m0||m0.length!==c.length)return;
+    let at=r===i?pos:m0.length;
+    if(r!==i){for(let k=0;k<m0.length;k++)if(m0[k]>=posO){at=k;break}}
+    const m=m0.slice();
+    list.push({i:r,set:snap(x)});
+    c.splice(at,0,'');m.splice(at,0,-1);
+    x.status='wrong';x.fix=c.join(' | ');x.cmap=m;x.fixed=false;
+  });
+  ustack.push({pg:p.page,items:list});rstack.length=0;
+  fillCol=pos;focusJ=pos;edIdx=i;
+  save();drawMap();renderSide(true);focusPara();
+  toast('Empty column added to '+list.length+(list.length===1?' row':' rows')+(kept?' ('+kept+' verified row'+(kept===1?'':'s')+' left as they were)':'')+'. Type the values; Enter moves to the next row.');
+}
+/* one undo/redo engine: applying an op returns its inverse */
+function applyOp(o){
+  const k=data.pages.findIndex(q=>q.page===o.pg);if(k<0)return null;
+  const p=data.pages[k];
+  if(o.op==='add'){insRow(k,o.at,o.row);return{k,i:o.at,x:o.row,inv:{pg:o.pg,op:'del',at:o.at}}}
+  if(o.op==='del'){const row=delRow(k,o.at);return{k,i:Math.min(o.at,p.paras.length-1),x:null,inv:{pg:o.pg,op:'add',at:o.at,row}}}
+  const its=o.items||[{i:o.i,set:o.prev||o.next}],inv=[];let last=null;
+  its.forEach(it=>{const x=p.paras[it.i];if(!x)return;inv.push({i:it.i,set:snap(x)});Object.assign(x,it.set);if(p.anch)delete p.anch[it.i];last={i:it.i,x}});
+  if(!last)return null;
+  return{k,i:last.i,x:last.x,inv:{pg:o.pg,items:inv}};
+}
+function afterUR(r){
+  cur=r.k;show();
+  const x=r.x;
+  edIdx=(x&&x.status==='wrong'&&!x.fixed)?r.i:null;
+  save();drawMap();renderSide(!!x&&x.status==='wrong');focusPara();
 }
 function undo(){
   let u=ustack.pop();
@@ -741,23 +815,13 @@ function undo(){
     }
     if(!u)return;
   }
-  const k=data.pages.findIndex(q=>q.page===u.pg);if(k<0)return;
-  const x=data.pages[k].paras[u.i];
-  rstack.push({pg:u.pg,i:u.i,next:snap(x)});
-  Object.assign(x,u.prev);if(data.pages[k].anch)delete data.pages[k].anch[u.i];
-  cur=k;show();
-  edIdx=(x.status==='wrong'&&!x.fixed)?u.i:null;
-  save();drawMap();renderSide(x.status==='wrong');focusPara();
+  const r=applyOp(u);if(!r)return;
+  rstack.push(r.inv);afterUR(r);
 }
 function redo(){
-  const r=rstack.pop();if(!r)return;
-  const k=data.pages.findIndex(q=>q.page===r.pg);if(k<0)return;
-  const x=data.pages[k].paras[r.i];
-  ustack.push({pg:r.pg,i:r.i,prev:snap(x)});
-  Object.assign(x,r.next);
-  cur=k;show();
-  edIdx=(x.status==='wrong'&&!x.fixed)?r.i:null;
-  save();drawMap();renderSide(x.status==='wrong');focusPara();
+  const o=rstack.pop();if(!o)return;
+  const r=applyOp(o);if(!r)return;
+  ustack.push(r.inv);afterUR(r);
 }
 function el(t,c,txt){const e=document.createElement(t);if(c)e.className=c;if(txt!==undefined)e.textContent=txt;return e}
 
@@ -773,27 +837,43 @@ function renderSide(focusTa){
   pend.slice(0,4).forEach((i,k)=>{
     const x=p.paras[i],d=el('div','para '+(k===0?'act':'wait'));
     const cells=x.text.split(' | '),isT=cells.length>1;
-    if(isT&&k===0){const w=el('div','tw'),t=el('table','tb ro'),r=el('tr');cells.forEach((c,j)=>{const td=el('td','',c);td.onclick=()=>{ac=j;drawCell(true)};r.append(td)});t.append(r);w.append(t);d.append(w);const cl=el('div','cl','');cl.id='cl';d.append(cl);setTimeout(drawCell,0)}
-    else d.append(el('div','tx',x.text));
+    if(x.added&&k===0){d.append(el('div','newrow','New row added by you. Type its cells below; it keeps the position where you added it.'))}
+    else if(isT&&k===0){const w=el('div','tw'),t=el('table','tb ro'),r=el('tr');cells.forEach((c,j)=>{const td=el('td','',c);td.onclick=()=>{ac=j;drawCell(true)};r.append(td)});t.append(r);w.append(t);d.append(w);const cl=el('div','cl','');cl.id='cl';d.append(cl);setTimeout(drawCell,0)}
+    else d.append(el('div','tx',x.added?'New row (added by you)':x.text));
     if(k===0){
       const r=el('div','row'),ok=el('button','good','Correct'),bd=el('button','bad'+(x.status==='wrong'?' on':''),'Wrong');
       ok.onclick=()=>okStep(i);bd.onclick=()=>setS(i,'wrong');r.append(ok,bd);
       if(isT){ok.id='okb';ok.textContent='Correct: next cell';
         const ar=el('button','','Accept row'),mg=el('button','','One sentence');
         ar.onclick=()=>setS(i,'ok');mg.onclick=()=>mergeRow(i);r.append(ar,mg)}
-      d.append(r);
+      if(!x.added)d.append(r);
       if(x.status==='wrong'){
         let ta;
         if(isT){
-          const fc=(x.fix||x.text).split(' | '),w=el('div','tw'),t=el('table','tb'),r=el('tr');
-          fc.forEach((c,j)=>{const td=el('td'),inp=el('input');if(j===0)inp.id='fixc';inp.value=c;
-            inp.onfocus=()=>{ac=j;drawCell(true)};inp.oninput=()=>{fc[j]=inp.value;x.fix=fc.join(' | ');save();drawMap()};
+          const fc=(x.fix||x.text).split(' | '),w=el('div','tw'),t=el('table','tb'),r=el('tr'),n0=x.text.split(' | ').length;
+          /* cmap[j] = which ORIGINAL cell (for the PDF highlight) the edited cell j came from; -1 = a cell you added */
+          const cmp=Array.isArray(x.cmap)&&x.cmap.length===fc.length?x.cmap:fc.map((_,j)=>x.added?-1:(fc.length===n0||j<n0?j:-1));
+          const commit=(nc,nm,j)=>{x.fix=nc.join(' | ');x.cmap=nm;focusJ=j;edIdx=i;save();drawMap();renderSide(true)};
+          const nb=(txt,title,fn)=>{const b=el('button','',txt);b.type='button';b.title=title;b.onclick=fn;return b};
+          fc.forEach((c,j)=>{const td=el('td'),inp=el('input');inp.className='fixin';if(j===0)inp.id='fixc';inp.value=c;
+            inp.onfocus=()=>{actJ=j;if(x.added)return;if(cmp[j]>=0){ac=cmp[j];drawCell(true)}else{const ch=$('#ch');if(ch)ch.style.display='none';const cl=$('#cl');if(cl)cl.textContent='Cell you added: nothing to highlight on the PDF'}};
+            inp.oninput=()=>{fc[j]=inp.value;x.fix=fc.join(' | ');if(Array.isArray(x.cmap)&&x.cmap.length===fc.length){}else x.cmap=cmp;save();drawMap()};
             inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();saveFix(i)}};
             td.append(inp);
-            if(j<fc.length-1){const mb=el('button','','Merge with next');mb.style.cssText='display:block;margin-top:4px;font-size:12px';
-              mb.onclick=()=>{fc.splice(j,2,(fc[j]+' '+fc[j+1]).replace(/\s+/g,' ').trim());x.fix=fc.join(' | ');save();drawMap();ac=j;renderSide(true)};td.append(mb)}
+            const tl=el('div','ct');
+            tl.append(
+              nb('+ left','Add an empty cell to the left of this one',()=>{const nc=fc.slice(),nm=cmp.slice();nc.splice(j,0,'');nm.splice(j,0,-1);commit(nc,nm,j)}),
+              nb('+ right','Add an empty cell to the right of this one',()=>{const nc=fc.slice(),nm=cmp.slice();nc.splice(j+1,0,'');nm.splice(j+1,0,-1);commit(nc,nm,j+1)}));
+            if(fc.length>2)tl.append(nb('\u00d7','Delete this cell',()=>{const nc=fc.slice(),nm=cmp.slice();nc.splice(j,1);nm.splice(j,1);commit(nc,nm,Math.max(0,j-1))}));
+            if(j<fc.length-1)tl.append(nb('Merge','Merge with the next cell',()=>{const nc=fc.slice(),nm=cmp.slice();nc.splice(j,2,(fc[j]+' '+fc[j+1]).replace(/\s+/g,' ').trim());nm.splice(j,2,nm[j]>=0?nm[j]:nm[j+1]);commit(nc,nm,j)}));
+            td.append(tl);
             r.append(td)});
-          t.append(r);w.append(t);ta=w;
+          t.append(r);w.append(t);
+          const rows=el('div','rc'),cols=el('div','rc'),gj=()=>Math.max(0,Math.min(actJ,fc.length-1));
+          rows.append(el('b','','Row:'),nb('+ above','Add an empty row above this one',()=>addRow(i,false)),nb('+ below','Add an empty row below this one',()=>addRow(i,true)),
+            nb(x.added?'Discard row':'Delete row',x.added?'Remove this added row':'Leave this row out of the final text',()=>{if(x.added)discardRow(i);else{x.fix='';saveFix(i)}}));
+          cols.append(el('b','','Column, every row on this page:'),nb('+ left','Add an empty column to the left of the cell you last clicked',()=>colAll(i,gj())),nb('+ right','Add an empty column to the right of the cell you last clicked',()=>colAll(i,gj()+1)));
+          const tools=el('div');tools.append(rows,cols);ta=el('div');ta.append(w,tools);
         }else{
           ta=el('textarea');ta.id='fixta';ta.value=x.fix||x.text;
           ta.oninput=()=>{x.fix=ta.value;save();drawMap()};
@@ -817,7 +897,12 @@ function renderSide(focusTa){
   m.oninput=()=>{p.missing=m.value;save();drawMap()};
   side.append(el('h4','','Missing text'),m);
   side.scrollTop=0;
-  if(focusTa){const t=$('#fixta')||$('#fixc');if(t)t.focus()}
+  if(!pend.length)fillCol=-1;
+  if(focusTa){
+    const ins=[...document.querySelectorAll('.fixin')],fj=focusJ>=0?focusJ:fillCol;focusJ=-1;
+    const t=(ins.length&&fj>=0&&ins[Math.min(fj,ins.length-1)])||$('#fixta')||$('#fixc');
+    if(t){t.focus();if(fj>=0&&t.select)t.select()}
+  }
 }
 
 $('#pv').onclick=()=>go(cur-1);
@@ -855,8 +940,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='c'&&t>-1)okStep(t);
   else if(e.key==='a'&&t>-1)setS(t,'ok');
   else if(e.key==='x'&&t>-1){e.preventDefault();setS(t,'wrong')}
-  else if(e.key==='z')undo();
-  else if(e.key==='y'||e.key==='Z')redo();
+  else if(e.key==='z'){e.preventDefault();undo()}
+  else if(e.key==='y'||e.key==='Z'){e.preventDefault();redo()}
   else if(e.key==='r')rotate();
   else if(e.key==='e')toggleEst();
   else if(e.key==='n'&&((p.paras.length&&t<0)||p.blank))go(cur+1);
@@ -871,7 +956,7 @@ $('#ex').onclick=()=>{
     pages_total:total,pages_verified:ok,
     pages:data.pages.map(p=>({
       page:p.page,verified:done(p),blank:p.blank,rotation:p.rot||0,missing:p.missing,
-      paragraphs:p.paras.map(x=>({text:x.text,status:x.status,fix:x.fix,fixed:!!x.fixed,final:x.status==='wrong'?(x.fixed?x.fix:null):x.status==='ok'?x.text:null}))
+      paragraphs:p.paras.map(x=>({text:x.text,status:x.status,fix:x.fix,fixed:!!x.fixed,added:!!x.added,final:x.status==='wrong'?(x.fixed?x.fix:null):x.status==='ok'?x.text:null}))
     }))
   };
   let base=(pdfName.replace(/\.pdf$/i,'')||data.instrument).replace(/[^\w\-]+/g,'_');
