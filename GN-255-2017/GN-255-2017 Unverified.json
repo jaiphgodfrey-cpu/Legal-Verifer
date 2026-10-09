@@ -1,0 +1,761 @@
+{
+  "document": {
+    "jurisdiction": "United Republic of Tanzania",
+    "issn": "0856-034X",
+    "publication": {
+      "type": "Supplement No. 29 to the Gazette of the United Republic of Tanzania",
+      "gazette_number": 30,
+      "volume": 98,
+      "dated": "2017-07-28",
+      "printed_by": "Government Printer, Dar es Salaam, by Order of Government"
+    },
+    "government_notice": { "number": 255, "published_on": "2017-07-28" },
+    "act": { "title": "The Forest Act", "chapter": "CAP. 323" },
+    "instrument": {
+      "title": "The Forest (Amendments) Regulations, 2017",
+      "type": "Regulations",
+      "made_under_section": 106,
+      "principal_regulations": { "name": "Forest Regulations, 2004", "citation": "G.N. No. 153 of 2004" }
+    },
+    "regulations": [
+      {
+        "number": 1,
+        "heading": "Citation",
+        "text": "These Regulations may be cited as the Forest (Amendments) Regulations, 2017 and shall be read as one with the Forest Regulations, 2004 hereinafter referred to as the 'principal Regulations'."
+      },
+      {
+        "number": 2,
+        "heading": "Amendment of the Schedules",
+        "text": "The Eighth and Fourteenth Schedules to the principal Regulations are hereby revoked and replaced for them with the following."
+      }
+    ],
+    "signed": {
+      "place": "Dodoma",
+      "year": 2017,
+      "signatory": "Jumanne A. Maghembe",
+      "office": "Minister for Natural Resources and Tourism"
+    }
+  },
+  "schedules": {
+    "eighth_schedule": {
+      "title": "Eighth Schedule",
+      "made_under": "regulation 18(4)",
+      "heading": "Scale of fees for permit, licence, certificate for operating recreational facilities in forest reserves",
+      "fee_categories": [
+        {
+          "section": "A",
+          "title": "Entrance fee each person per day",
+          "items": [
+            { "description": "Aged 18 years and above", "fees": { "east_african_citizens_nationals_tzs": 2000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } },
+            { "description": "Aged 5 - 17 years", "fees": { "east_african_citizens_nationals_tzs": 1000.0, "residents_usd": 5.0, "non_residents_usd": 5.0 } },
+            { "description": "Aged below 5 years", "fees": { "east_african_citizens_nationals_tzs": "Free", "residents_usd": "Free", "non_residents_usd": "Free" } }
+          ]
+        },
+        {
+          "section": "B",
+          "title": "Permit for camping for each day",
+          "groups": [
+            {
+              "group": "For each owned tent",
+              "items": [
+                { "description": "Capacity: 1 person", "fees": { "east_african_citizens_nationals_tzs": 3000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } },
+                { "description": "Capacity: 2 - 5 persons", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 15.0, "non_residents_usd": 15.0 } },
+                { "description": "Capacity: More than 5 persons", "fees": { "east_african_citizens_nationals_tzs": 15000.0, "residents_usd": 20.0, "non_residents_usd": 20.0 } }
+              ]
+            },
+            {
+              "group": "For each Government owned tent",
+              "items": [
+                { "description": "Capacity: 1 person", "fees": { "east_african_citizens_nationals_tzs": 2000.0, "residents_usd": 5.0, "non_residents_usd": 5.0 } },
+                { "description": "Capacity: 2 - 5 persons", "fees": { "east_african_citizens_nationals_tzs": 5000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } },
+                { "description": "Capacity: More than 5 persons", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 15.0, "non_residents_usd": 15.0 } }
+              ]
+            }
+          ]
+        },
+        {
+          "section": "C",
+          "title": "Photography / commercial photography fees",
+          "basis": "Per person per day",
+          "items": [
+            { "description": "Person / day", "fees": { "east_african_citizens_nationals_tzs": 5000.0, "residents_usd": 15.0, "non_residents_usd": 15.0 } }
+          ]
+        },
+        {
+          "section": "D",
+          "title": "Permit for each vehicle per day",
+          "items": [
+            { "description": "Up to 2,000 kg", "fees": { "local_registration_tzs": 5000.0, "foreign_registration_usd": 20.0 } },
+            { "description": "From 2,001 - 7,000 kg", "fees": { "local_registration_tzs": 15000.0, "foreign_registration_usd": 30.0 } },
+            { "description": "From 7,001 kg and above", "fees": { "local_registration_tzs": 20000.0, "foreign_registration_usd": 40.0 } }
+          ]
+        },
+        {
+          "section": "E",
+          "title": "Guide service fees per day",
+          "items": [
+            { "description": "Use of official guide", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } },
+            { "description": "Walking safari guide (back packer)", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 10.0, "non_residents_usd": 15.0 } },
+            { "description": "Night walk guide", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } }
+          ]
+        },
+        {
+          "section": "F",
+          "title": "Commercial filming fees",
+          "basis": "Each person / group (including directors, producers, artists, technicians) making or participating in making of film",
+          "groups": [
+            {
+              "group": "For a group of 1 - 10 persons",
+              "items": [
+                { "description": "First week", "fees": { "east_african_citizens_nationals_tzs": 50000.0, "residents_usd": 500.0, "non_residents_usd": 500.0 } },
+                { "description": "Second week", "fees": { "east_african_citizens_nationals_tzs": 40000.0, "residents_usd": 400.0, "non_residents_usd": 400.0 } },
+                { "description": "Third week", "fees": { "east_african_citizens_nationals_tzs": 30000.0, "residents_usd": 300.0, "non_residents_usd": 300.0 } },
+                { "description": "For each subsequent week", "fees": { "east_african_citizens_nationals_tzs": 20000.0, "residents_usd": 200.0, "non_residents_usd": 200.0 } }
+              ]
+            },
+            {
+              "group": "For a group of 11 - 20 persons",
+              "items": [
+                { "description": "First week", "fees": { "east_african_citizens_nationals_tzs": 100000.0, "residents_usd": 1000.0, "non_residents_usd": 1000.0 } },
+                { "description": "Second week", "fees": { "east_african_citizens_nationals_tzs": 75000.0, "residents_usd": 750.0, "non_residents_usd": 750.0 } },
+                { "description": "Third week", "fees": { "east_african_citizens_nationals_tzs": 50000.0, "residents_usd": 500.0, "non_residents_usd": 500.0 } },
+                { "description": "For each subsequent week", "fees": { "east_african_citizens_nationals_tzs": 40000.0, "residents_usd": 400.0, "non_residents_usd": 400.0 } }
+              ]
+            },
+            {
+              "group": "For a group of more than 20 persons",
+              "items": [
+                { "description": "First week", "fees": { "east_african_citizens_nationals_tzs": 200000.0, "residents_usd": 2000.0, "non_residents_usd": 2000.0 } },
+                { "description": "Second week", "fees": { "east_african_citizens_nationals_tzs": 150000.0, "residents_usd": 1500.0, "non_residents_usd": 1500.0 } },
+                { "description": "Third week", "fees": { "east_african_citizens_nationals_tzs": 100000.0, "residents_usd": 1000.0, "non_residents_usd": 1000.0 } },
+                { "description": "For each subsequent week", "fees": { "east_african_citizens_nationals_tzs": 500000.0, "residents_usd": 500.0, "non_residents_usd": 500.0 } }
+              ]
+            }
+          ]
+        },
+        {
+          "section": "G",
+          "title": "Horse riding and orienteering in forest reserve and plantations",
+          "basis": "Fees per person per day",
+          "items": [
+            { "description": "Per person per day", "fees": { "east_african_citizens_nationals_tzs": 3000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } }
+          ]
+        },
+        {
+          "section": "H",
+          "title": "To carry out research in the forest reserve",
+          "basis": "Fees per person per day",
+          "items": [
+            { "description": "Academics", "fees": { "east_african_citizens_nationals_tzs": 5000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } },
+            { "description": "Masters and above", "fees": { "east_african_citizens_nationals_tzs": 2500.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } }
+          ]
+        },
+        {
+          "section": "I",
+          "title": "To operate tourist facility in forest reserve (lodge, tented camp, etc.)",
+          "items": [
+            { "description": "Establishment fee per ha or part of", "fees": { "east_african_citizens_nationals_tzs": 1000000.0, "residents_usd": 5000.0, "non_residents_usd": 5000.0 } },
+            { "description": "Forest reserve management fee per year / ha or part of", "fees": { "east_african_citizens_nationals_tzs": 500000.0, "residents_usd": 3500.0, "non_residents_usd": 3500.0 } },
+            { "description": "To operate picnic site per year per ha or part of", "fees": { "east_african_citizens_nationals_tzs": 500000.0, "residents_usd": 500.0, "non_residents_usd": 500.0 } }
+          ]
+        },
+        {
+          "section": "J",
+          "title": "Sailing, motor boating and sport fishing in mangroves",
+          "items": [
+            { "description": "Sailing with canoe per day or part of", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 20.0, "non_residents_usd": 20.0 } },
+            { "description": "Motor boating per day or part of", "fees": { "east_african_citizens_nationals_tzs": 50000.0, "residents_usd": 50.0, "non_residents_usd": 50.0 } },
+            { "description": "Sport fishing per day or part of", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 20.0, "non_residents_usd": 20.0 } },
+            { "description": "Board walk per day or part of", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } }
+          ]
+        },
+        {
+          "section": "K",
+          "title": "Sailing, motor boating and sport fishing in inland water bodies inside forest reserves",
+          "items": [
+            { "description": "Sailing with canoe per day or part of", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 20.0, "non_residents_usd": 20.0 } },
+            { "description": "Motor boating per day or part of", "fees": { "east_african_citizens_nationals_tzs": 50000.0, "residents_usd": 50.0, "non_residents_usd": 50.0 } },
+            { "description": "Sport fishing per day or part of", "fees": { "east_african_citizens_nationals_tzs": 10000.0, "residents_usd": 20.0, "non_residents_usd": 20.0 } },
+            { "description": "Canopy walk", "fees": { "east_african_citizens_nationals_tzs": 5000.0, "residents_usd": 15.0, "non_residents_usd": 15.0 } },
+            { "description": "Board walk per day or part of", "fees": { "east_african_citizens_nationals_tzs": 2000.0, "residents_usd": 10.0, "non_residents_usd": 10.0 } }
+          ]
+        }
+      ]
+    },
+    "fourteenth_schedule": {
+      "title": "Fourteenth Schedule",
+      "made_under": "regulation 29(1)",
+      "heading": "Classification, fee rates for permits, licences or certificate for felling trees, collecting forest produce and other services",
+      "part_i": {
+        "title": "Classification of tree species",
+        "non_plantation_forests": [
+          {
+            "class": "IA",
+            "species": [
+              { "botanical_name": "Dalbergia melanoxylon", "trade_vernacular_names": "E. A. blackwood, vernacular, mapingo, mugembe" },
+              { "botanical_name": "Diospyros ebenum / mespiliformis", "trade_vernacular_names": "Ebony, mgiriti, msindi, mnumbuhi, mkulvi" },
+              { "botanical_name": "Combretum stuhlmannii", "trade_vernacular_names": "Peramwitu, mguruwe, mkwaya" },
+              { "botanical_name": "Olea all spp.", "trade_vernacular_names": "Loliondo, mchiyo, mshisho, brown olive, mzira, E. A. olive, mtagala, mwalambo, mkimba, kubwa" },
+              { "botanical_name": "Afzelia quanzensis", "trade_vernacular_names": "Afzelia, mkora, mkongo, mafu, mfuru" },
+              { "botanical_name": "Entandophragma all spp.", "trade_vernacular_names": "Mrie, mongo, muwondo, mbokoboko, mkalikili" },
+              { "botanical_name": "Milicia excelsa", "trade_vernacular_names": "Mvule, mkongola, iroko" },
+              { "botanical_name": "Khaya anthotheca", "trade_vernacular_names": "Mkangazi, mwamiovu" },
+              { "botanical_name": "Juniperus procera", "trade_vernacular_names": "Cedar, mtarakwa, mwangati" }
+            ]
+          },
+          {
+            "class": "IB",
+            "species": [
+              { "botanical_name": "Pterocarpus all spp.", "trade_vernacular_names": "Mninga, mkula, mngubi, mtumbati mtoni, mkurungu, mninga maji" },
+              { "botanical_name": "Millettia stuhlmannii", "trade_vernacular_names": "Pangapanga, mpande" },
+              { "botanical_name": "Beilschmiedia kweo", "trade_vernacular_names": "Mfimbo, mkweo, mkanta" },
+              { "botanical_name": "Brachylaena huillensis", "trade_vernacular_names": "Muhuhu, mhugwe, mkarambati" },
+              { "botanical_name": "Mangrove all species", "trade_vernacular_names": "Mikoko" },
+              { "botanical_name": "Swartzia madagascariensis", "trade_vernacular_names": "Paurosa, ksanda, msekeseke" },
+              { "botanical_name": "Allanblackia stuhlmannii", "trade_vernacular_names": "Mkimbo" },
+              { "botanical_name": "Breonadia salicina", "trade_vernacular_names": "Adina, mgusia, mdogowe, mgwina" },
+              { "botanical_name": "Cephalosphaera usambarensis", "trade_vernacular_names": "Mtambara, mtambaa" },
+              { "botanical_name": "Fagaropsis angolensis", "trade_vernacular_names": "Mtua, mkunguni, mtongoti" },
+              { "botanical_name": "Hagenia abyssinica", "trade_vernacular_names": "Hagenia, mwanga, liziluzi" },
+              { "botanical_name": "Brachystegia tamarindoides", "trade_vernacular_names": "Mseni" },
+              { "botanical_name": "Markhamia all spp.", "trade_vernacular_names": "Mtalawanda" },
+              { "botanical_name": "Newtonia all spp.", "trade_vernacular_names": "Mshashita, mdadauka, mkufi mpung, newtonia" },
+              { "botanical_name": "Ocotea usambarensis", "trade_vernacular_names": "Camphorwood, mkulo, mseri, muheti, maasi" },
+              { "botanical_name": "Ozoroa insignis", "trade_vernacular_names": "Mwembe pori" },
+              { "botanical_name": "Pericopsis angolensis", "trade_vernacular_names": "Mbaga, muwanga, afromosia" },
+              { "botanical_name": "Baphia kirkii", "trade_vernacular_names": "Balphia mkuruti, mkuranga" },
+              { "botanical_name": "Brachystegia all spp.", "trade_vernacular_names": "Mtundu, myombo, mkuti" },
+              { "botanical_name": "Julbernardia all spp.", "trade_vernacular_names": "Muba, mvuva, mtondo, mtondoro, mwangati, msima, mgombo, muwa, mpanate" }
+            ]
+          },
+          {
+            "class": "II",
+            "species": [
+              { "botanical_name": "Parinari curatellifolia", "trade_vernacular_names": "Mubule, mule, msambula, msaula" },
+              { "botanical_name": "Podocarpus all spp.", "trade_vernacular_names": "Mse, msisimu, mtokosi" },
+              { "botanical_name": "Syzygium cumini", "trade_vernacular_names": "Mzambarau, mvengi" },
+              { "botanical_name": "Vitex keniensis", "trade_vernacular_names": "Mfudo" },
+              { "botanical_name": "Berchemia discolor", "trade_vernacular_names": "Bird plum, mgandu, mnago, mkuni, okoo nyabumbu" },
+              { "botanical_name": "Mimusops kummel", "trade_vernacular_names": "Muhulu, mgoma" },
+              { "botanical_name": "Chrysophyllum spp.", "trade_vernacular_names": "Mberimberi, mfu-mulembelembe" },
+              { "botanical_name": "Burkea africana", "trade_vernacular_names": "Bukea, mkarati, magando, msangala" },
+              { "botanical_name": "Albizia all spp.", "trade_vernacular_names": "Mfurangi, mtanga, mdurasi, mvimbafuru, mukinga, omurere, mshai, mboromo, mhenge" },
+              { "botanical_name": "Erythrophleum guineense", "trade_vernacular_names": "Bangawanga, mjeringwe" },
+              { "botanical_name": "Spirostachys africana", "trade_vernacular_names": "Misanda, mwavi, mbaraka, mkarati, mkola" },
+              { "botanical_name": "Amblygonocarpus angolensis", "trade_vernacular_names": "Msaraka, muharaka, mwaraka" },
+              { "botanical_name": "Acacia nigrescens", "trade_vernacular_names": "Mkambala, mtambara, muhama" }
+            ]
+          },
+          {
+            "class": "III",
+            "species": [
+              { "botanical_name": "Morus lactea", "trade_vernacular_names": "E. A. mulberry, kumbu, mkuzufunta" },
+              { "botanical_name": "Ficalhoa laurifolia", "trade_vernacular_names": "Ficalhoa, iseta, muta" },
+              { "botanical_name": "Cassipourea malosana", "trade_vernacular_names": "Pillar wood, ndiri, msadora" },
+              { "botanical_name": "Lovoa brownii / swynnertonii", "trade_vernacular_names": "Nkoba (Uganda walnut), msau, mukusu, Kilimanjaro mahogany" },
+              { "botanical_name": "Cordyla africana", "trade_vernacular_names": "Codyla, mroma, mgwata" },
+              { "botanical_name": "Ekebergia ruppeliana", "trade_vernacular_names": "Musizi, msisi, riwe, msimbi, ol-mikump" },
+              { "botanical_name": "Sterculia all spp.", "trade_vernacular_names": "Mhozya, mluze, mgude, mfune, mkweanyani, mkweranyani, mguwa, mkwelangedere, moza, mbalamwezi, mperamusi, mpalamusi, mwingirangi-dengi, mkungulanga" },
+              { "botanical_name": "Xymalos monospora", "trade_vernacular_names": "Mburumo, dimu, mkalikisumu, lemonwood" },
+              { "botanical_name": "Faurea all spp.", "trade_vernacular_names": "Mifuka, msisi, lisega" },
+              { "botanical_name": "Rapanea rhododendroides", "trade_vernacular_names": "Rapanea, mlimang'ombe, mwasa, mshiwizo, kidongashawa" },
+              { "botanical_name": "Pteleopsis myrtifolia", "trade_vernacular_names": "Mwindi, mnepa, mparu, mgofu, makwenzi" },
+              { "botanical_name": "Bombax rhodognaphalon", "trade_vernacular_names": "Msufi-mwitu, mfume" },
+              { "botanical_name": "Fagara amaniensis", "trade_vernacular_names": "Amani satin wood, mfarakumbi, mfuakumbi" },
+              { "botanical_name": "Maesopsis eminii (in natural forests)", "trade_vernacular_names": "Muhumula, msila" }
+            ]
+          },
+          {
+            "class": "IV",
+            "species": [
+              { "botanical_name": "All tree species not listed in the preceding classes (others)", "trade_vernacular_names": null }
+            ]
+          }
+        ],
+        "forest_plantations": {
+          "softwood": {
+            "description": "All softwood plantation species except Juniperus procera",
+            "species": [
+              { "botanical_name": "Pinus all species", "trade_name": "Pines" },
+              { "botanical_name": "Cupressus all species", "trade_name": "Cypress" },
+              { "botanical_name": "Araucaria all species", "trade_name": "Araucaria" },
+              { "botanical_name": "All other coniferous species not listed above", "trade_name": "Conifers" }
+            ]
+          },
+          "hardwood": [
+            {
+              "class": "I",
+              "species": [
+                { "botanical_name": "Tectona grandis", "trade_name": "Teak, mtiki, msaji" },
+                { "botanical_name": "Cinnamomum camphora", "trade_name": "Japanese camphor" },
+                { "botanical_name": "Milicia excelsa", "trade_name": "Mvule" }
+              ]
+            },
+            {
+              "class": "II",
+              "species": [
+                { "botanical_name": "Eucalyptus all species", "trade_name": "Eucalyptus, mkaratusi, mlingoti" }
+              ]
+            },
+            {
+              "class": "III",
+              "species": [
+                { "botanical_name": "Cedrela odorata", "trade_name": "Msederela" },
+                { "botanical_name": "Grevillea robusta", "trade_name": "Grevillea" },
+                { "botanical_name": "Acacia melanoxylon", "trade_name": "Acacia" },
+                { "botanical_name": "Acrocarpus fraxinifolius", "trade_name": "Acrocarpus" },
+                { "botanical_name": "Maesopsis eminii", "trade_name": "Maesopsis" }
+              ]
+            },
+            {
+              "class": "IV",
+              "species": [
+                { "botanical_name": "All other hardwood plantation species not listed above", "trade_name": null }
+              ]
+            }
+          ]
+        }
+      },
+      "part_ii": {
+        "title": "Fees, tree volume tables and tariff tables",
+        "A": {
+          "title": "Fees payable on non-plantation produce where the produce is cut and removed by the licensee from Government owned forest reserves and general lands, as in Part I (except sandalwood)",
+          "items": [
+            {
+              "item": 1,
+              "name": "Logs",
+              "unit": "royalty per cubic metre (standing tree volume), TZS",
+              "fees": [
+                { "description": "Class IA", "fee_tzs": 291500.0 },
+                { "description": "Class IB", "fee_tzs": 260000.0 },
+                { "description": "Class II", "fee_tzs": 195000.0 },
+                { "description": "Class III", "fee_tzs": 146000.0 },
+                { "description": "Class IV (other species not listed above)", "fee_tzs": 97200.0 }
+              ]
+            },
+            {
+              "item": 2,
+              "name": "Poles of non-plantation forest species",
+              "fees": [
+                { "description": "5 cm but not more than 10 cm diameter at butt, each", "fee_tzs": 1650.0 },
+                { "description": "Over 10 cm but not more than 20 cm diameter at butt, each", "fee_tzs": 2400.0 }
+              ]
+            },
+            {
+              "item": 3,
+              "name": "Withies",
+              "fees": [
+                { "description": "A stem or branch under 5 cm diameter at butt end (per score of 30 withies)", "fee_tzs": 4000.0 }
+              ]
+            },
+            {
+              "item": 4,
+              "name": "Firewood",
+              "fees": [
+                { "description": "Firewood by quantity obtained from natural forests (per stacked cubic metre from dead branches and off cuts)", "fee_tzs": 6500.0 },
+                { "description": "Firewood obtained from planted standing tree (per stacked cubic metre)", "fee_tzs": 6500.0 }
+              ]
+            },
+            {
+              "item": 5,
+              "name": "Charcoal",
+              "fees": [
+                { "description": "Fees for a bag of charcoal (50 kg per bag)", "fee_tzs": 12500.0 }
+              ]
+            },
+            {
+              "item": 6,
+              "name": "Fibres",
+              "fees": [
+                { "description": "Quantity licence for fibres and raffia (umondo, ukindu and grasses), per kg or part thereof", "fee_tzs": 200.0 }
+              ]
+            },
+            {
+              "item": 7,
+              "name": "Tree seed and seedlings",
+              "fees": [
+                { "description": "Tree seed: tree seeds of all types (species) shall be sold according to the catalogue issued by the Tanzania Tree Seed Agency, Morogoro", "fee_tzs": null },
+                { "description": "Christmas tree: fee shall be charged per running metre or part thereof", "fee_tzs": 1500.0 },
+                { "description": "Seedlings: bare seedlings", "fee_tzs": 300.0 },
+                { "description": "Seedlings: potted seedlings", "fee_tzs": 400.0 },
+                { "description": "Seedlings: non-ornamental bare rooted", "fee_tzs": 600.0 },
+                { "description": "Seedlings: ornamental potted", "fee_tzs": 1500.0 }
+              ]
+            },
+            {
+              "item": 8,
+              "name": "Mangrove produce",
+              "fees": [
+                { "description": "All mangrove trees of over 20 cm diameter over-bark at 1.3 metres above ground shall be considered as logs (fees as in Item 1, Class IB)", "fee_tzs": 241000.0 },
+                {
+                  "description": "Mangrove poles",
+                  "diameter_classes": [
+                    { "class": "I", "diameter_at_butt": "15 - 20 cm", "rate_per_score_of_20_poles_tzs": 30000.0, "rate_per_pole_tzs": 1900.0 },
+                    { "class": "II", "diameter_at_butt": "10 - 14.9 cm", "rate_per_score_of_20_poles_tzs": 24000.0, "rate_per_pole_tzs": 1500.0 },
+                    { "class": "III", "diameter_at_butt": "5 - 9.9 cm", "rate_per_score_of_20_poles_tzs": 18000.0, "rate_per_pole_tzs": 1200.0 },
+                    { "class": "IV", "diameter_at_butt": "below 5 cm", "rate_per_score_of_20_poles_tzs": 12000.0, "rate_per_pole_tzs": 900.0 }
+                  ]
+                }
+              ]
+            },
+            {
+              "item": 9,
+              "name": "Bark from forest plantation trees",
+              "fees": [
+                { "description": "Wattle bark for tannin: bark, per stacked cubic metre", "fee_tzs": 4600.0 },
+                { "description": "Wattle bark for tannin: price of wood left after debarking shall be sold at the rates of firewood or poles as in Items 2 and 4 above", "fee_tzs": null },
+                { "description": "Other barks including medicinal barks, per kg", "fee_tzs": 1500.0 }
+              ]
+            },
+            {
+              "item": 10,
+              "name": "Bamboo from natural forest and plantation",
+              "diameter_classes": [
+                { "class": "I", "diameter_at_butt": "above 5 cm", "rate_per_score_of_20_poles_tzs": 16000.0, "rate_per_pole_tzs": 900.0 },
+                { "class": "II", "diameter_at_butt": "below 5 cm", "rate_per_score_of_20_poles_tzs": 10000.0, "rate_per_pole_tzs": 600.0 }
+              ]
+            },
+            {
+              "item": 11,
+              "name": "Gums and resins",
+              "fees": [
+                { "description": "Fee rates shall be per kg", "fee_tzs": 750.0 }
+              ]
+            },
+            {
+              "item": 12,
+              "name": "Medicinal plants",
+              "fees": [
+                { "description": "Stem and roots, per kg", "fee_tzs": 750.0 },
+                { "description": "Leaves, flowers, splits etc., per kg", "fee_tzs": 500.0 }
+              ]
+            },
+            {
+              "item": 13,
+              "name": "Non-wood forest products (sold per kg)",
+              "fees": [
+                { "description": "Allanblackia fruits", "fee_tzs": 200.0 },
+                { "description": "Baobab fruits / pulp", "fee_tzs": 50.0 },
+                { "description": "Tamarindus indica fruits", "fee_tzs": 200.0 },
+                { "description": "Mushroom", "fee_tzs": 200.0 },
+                { "description": "Other wild fruits not in (a, b, c) above", "fee_tzs": 100.0 }
+              ]
+            },
+            {
+              "item": 14,
+              "name": "Non-plantation forest processed products fees (products not possessing harvesting licence or receipt from registered dealer)",
+              "fees": [
+                { "description": "Carvings (from 11 kg up to 15 kg)", "fee_tzs": 2300.0 },
+                { "description": "Mpingo carvings (for every additional kg above 15 kg)", "fee_tzs": 4600.0 },
+                { "description": "Other carvings (for every additional kg above 15 kg)", "fee_tzs": 3000.0 },
+                { "description": "Door shutters, per piece", "fee_tzs": 50500.0 },
+                { "description": "Door and window frames, per piece", "fee_tzs": 51800.0 },
+                { "description": "Cupboards, per piece", "fee_tzs": 50000.0 },
+                { "description": "Chair and stool, per piece", "fee_tzs": 17250.0 },
+                { "description": "Wooden school desk, per piece", "fee_tzs": 17250.0 },
+                { "description": "Bed, per piece", "fee_tzs": 20000.0 },
+                { "description": "Wooden office / dining table, per piece", "fee_tzs": 25000.0 },
+                { "description": "1 set of wooden couch, per set of 3 to 6 pieces", "fee_tzs": 30000.0 },
+                { "description": "Any additional piece", "fee_tzs": 20000.0 },
+                { "description": "Basket / mats, per kg", "fee_tzs": 1700.0 },
+                { "description": "Other wooden small items, per piece", "fee_tzs": 1700.0 }
+              ]
+            },
+            {
+              "item": 15,
+              "name": "Forest soil, sand, gravel and stones (charged per ton; applicable only with special permit from Chief Executive)",
+              "fees": [
+                { "description": "Tailing for mineral extraction", "fee_tzs": 10500.0 },
+                { "description": "Fees for forest soil, sand, gravel and stones", "fee_tzs": 3100.0 }
+              ]
+            }
+          ]
+        },
+        "B": {
+          "title": "Fees payable on plantation forest produce when felled and removed by licensee from Government owned forests",
+          "notes": [
+            "In the event the mode of disposal is by tender or public auction, the fees set below shall be the baseline price.",
+            "In the event the mode of disposal is by public auction, the auction price shall apply to all persons who have valid sale agreement with the Government."
+          ],
+          "items": [
+            {
+              "item": 1,
+              "name": "All softwood plantation species except Juniperus procera",
+              "fees_by_diameter_class_at_dbh_cm": [
+                { "diameter_class": "< 5 cm", "fee": "To be sold as firewood" },
+                { "diameter_class": "6 - 10 cm", "fee": "To be sold as poles per piece" },
+                { "diameter_class": "11 - 20 cm", "fee_tzs_per_m3": 6900.0 },
+                { "diameter_class": "21 - 25 cm", "fee_tzs_per_m3": 13700.0 },
+                { "diameter_class": "26 - 30 cm", "fee_tzs_per_m3": 34200.0 },
+                { "diameter_class": "31 - 35 cm", "fee_tzs_per_m3": 59200.0 },
+                { "diameter_class": "> 35 cm", "fee_tzs_per_m3": 65600.0 },
+                { "diameter_class": "Logging residues", "fee_tzs": 5000.0 },
+                { "diameter_class": "Sawmill residues", "fee_tzs": 1000.0 }
+              ]
+            },
+            {
+              "item": 2,
+              "name": "Pulpwood",
+              "fees": [
+                { "description": "Fees for pulpwood trees shall be charged per cubic metre and shall not be used for any other purpose; when used for any other purpose other than pulp production, shall be charged as in Part B Item 1 above", "fee_tzs_per_m3": 14300.0 }
+              ],
+              "note": "With reference to the Forest Plantations' Management Plans in operation for the current 2014/2015 - 2018/2019 Strategic Plan, trees raised and managed to cater for pulpwood raw material have not attained the requisite rotation age. TFS, with utmost intent to fathom public interest and the State's motive to nurture industrial revolution, has been supplying pulpwood raw material from the stock primarily raised to yield saw logs (irrespective of diameter classification) as a remedial practice that necessitates designation of a complimentary Government Notice (GN)."
+            },
+            {
+              "item": 3,
+              "name": "Poles from softwood plantation forest species",
+              "fees": [
+                { "description": "6 cm but not more than 10 cm diameter at butt end, each", "fee_tzs": 360.0 }
+              ]
+            },
+            {
+              "item": 4,
+              "name": "Juniperus procera",
+              "fees": [
+                { "description": "Juniperus procera (all sizes), per cubic metre", "fee_tzs": 89100.0 }
+              ]
+            },
+            {
+              "item": 5,
+              "name": "All hardwood plantation species except teak, Eucalyptus and Olea spp. (Cedrela, Grevillea, Acacia, Acrocarpus, Maesopsis, Terminalia, Casuarina and Gmelina)",
+              "fees_by_diameter_class_at_dbh_cm": [
+                { "diameter_class": "< 5 cm", "fee": "To be sold as firewood" },
+                { "diameter_class": "6 - 10 cm", "fee": "To be sold as poles per piece" },
+                { "diameter_class": "11 - 20 cm", "fee_tzs_per_m3": 7200.0 },
+                { "diameter_class": "21 - 30 cm", "fee_tzs_per_m3": 14300.0 },
+                { "diameter_class": "31 - 35 cm", "fee_tzs_per_m3": 26700.0 },
+                { "diameter_class": "> 35 cm", "fee_tzs_per_m3": 35700.0 }
+              ]
+            },
+            {
+              "item": "5a",
+              "name": "Fees per m3 for teak",
+              "fees_by_diameter_class": [
+                { "diameter_class": "< 5 cm", "fee": "To be sold as firewood" },
+                { "diameter_class": "First thinning", "fee": "To be sold as poles per piece", "fee_tzs_per_piece": 1500.0 },
+                { "diameter_class": "Second thinning", "fee": "To be sold as poles per piece", "fee_tzs_per_piece": 2000.0 },
+                { "diameter_class": "All other sizes", "fee": "Shall be sold according to prevailing market prices per cubic metre of teak" }
+              ]
+            },
+            {
+              "item": 6,
+              "name": "Olea plantation species (fees per m3)",
+              "fees_by_diameter_class_at_dbh_cm": [
+                { "diameter_class": "< 10 cm", "fee": "To be sold as firewood" },
+                { "diameter_class": "10 - 20 cm", "fee_tzs_per_m3": 25000.0 },
+                { "diameter_class": "21 - 30 cm", "fee_tzs_per_m3": 35000.0 },
+                { "diameter_class": "31 - 35 cm", "fee_tzs_per_m3": 55000.0 },
+                { "diameter_class": "> 35 cm", "fee_tzs_per_m3": 60000.0 }
+              ]
+            },
+            {
+              "item": 7,
+              "name": "Eucalyptus species (E. saligna and E. grandis)",
+              "fees_by_diameter_class_at_dbh_cm": [
+                { "diameter_class": "< 10 cm", "fee": "To be sold as firewood" },
+                { "diameter_class": "11 - 20 cm", "fee_tzs_per_m3": 7300.0 },
+                { "diameter_class": "21 - 30 cm", "fee_tzs_per_m3": 18200.0 },
+                { "diameter_class": "> 30 cm", "fee_tzs_per_m3": 31700.0 }
+              ],
+              "eucalyptus_all_other_species": {
+                "fees_by_diameter_class_at_dbh_cm": [
+                  { "diameter_class": "< 10 cm", "fee": "To be sold as firewood" },
+                  { "diameter_class": "11 - 20 cm", "fee": "To be sold as poles per piece" },
+                  { "diameter_class": "21 - 30 cm", "fee_tzs_per_m3": 6700.0 },
+                  { "diameter_class": "> 30 cm", "fee_tzs_per_m3": 16700.0 }
+                ]
+              },
+              "eucalyptus_pulpwood": {
+                "description": "Fees for eucalyptus pulpwood shall be charged per cubic metre and shall not be used for any other purpose; for trees grown for sawlogs scheme but used for pulpwood, the royalty shall be charged as in Part B Item 7 above",
+                "fee_tzs_per_m3": 16100.0
+              }
+            },
+            {
+              "item": 8,
+              "name": "Poles from hardwood plantations",
+              "fees": [
+                { "description": "For poles less than 10 cm DBH over-bark, fees shall be per running metre", "fee_tzs": 1300.0 },
+                { "description": "All eucalyptus species classified as poles, fee shall be per running metre", "fee_tzs": 900.0 }
+              ]
+            },
+            {
+              "item": 9,
+              "name": "Firewood from plantations",
+              "fees": [
+                { "description": "Quantity licence for hardwood plantation species, per stacked cubic metre", "fee_tzs": 3600.0 },
+                { "description": "Quantity licence for softwood plantation species, per stacked cubic metre", "fee_tzs": 1900.0 }
+              ]
+            }
+          ]
+        },
+        "C": {
+          "title": "Other fees payable on services related to forest products",
+          "items": [
+            {
+              "item": 1,
+              "name": "Licence to establish and operate other businesses in forest reserves and plantations",
+              "fees": [
+                { "ref": "(i)", "description": "Installation of telecommunication facilities, mineral water extraction facilities, per 15 m x 15 m per year", "fee_tzs": 4500000.0 },
+                { "ref": "(ii)", "description": "Forest reserve management fee for (i) above, per year", "fee_tzs": 4200000.0 },
+                { "ref": "(iii)", "description": "Where the telecommunication facility is shared by more than one service provider, 50% of the fees in (ii) above shall be charged for each additional service provider per year", "fee": "50% of fee in (ii)" },
+                { "ref": "(iv)", "description": "Pre-fabricated houses, hydropower and large scale irrigation scheme (establishment fee per ha / year)", "fee_tzs": 4500000.0 },
+                { "ref": "(v)", "description": "Forest reserve management fee for (iv) above, per year per ha", "fee_tzs": 602000.0 },
+                { "ref": "(vi)", "description": "Piers and landings in forest reserves, per year per ha or part of", "fee_tzs": 800000.0 },
+                { "ref": "(vii)", "description": "To make solar salt pans and prawn farming in the mangrove forest reserves, per ha or part of per year", "fee_tzs": 100000.0 },
+                { "ref": "(viii)", "description": "Forest reserve management fee for (vii) above, per year per ha or part of", "fee_tzs": 50000.0 },
+                { "ref": "(ix)", "description": "To install billboards in forest reserve (establishment fee)", "fee_tzs": 602000.0 },
+                { "ref": "(x)", "description": "Forest reserve management fee for (ix) above, per year per billboard", "fee_tzs": 150000.0 },
+                { "ref": "(xi)", "description": "Airstrips in forest reserve (establishment fee per ha or part of)", "fee_tzs": 4500000.0 },
+                { "ref": "(xii)", "description": "Forest reserve management fee for (xi) above, per year per ha or part of", "fee_tzs": 1505000.0 },
+                { "ref": "(xiii)", "description": "Prospecting / exploration fees in a forest reserve, per year per 100 ha or part of", "fee_tzs": 1000000.0 },
+                { "ref": "(xiv)", "description": "Installation fee for water tank in a forest reserve, per ha or part of", "fee_tzs": 510000.0 },
+                { "ref": "(xv)", "description": "Forest reserve management fee for (xiv) above, per year", "fee_tzs": 256000.0 },
+                { "ref": "(xvi)", "description": "Mining fees (forest management fees) in a forest reserve, per year per ha or part of", "fee_tzs": 1505000.0 },
+                { "ref": "(xvii)", "description": "Establishment fee of mineral extraction plant, per ha or part thereof per year", "fee_tzs": 11800000.0 },
+                { "ref": "(xviii)", "description": "Forest reserve management fee for (xvii) above, per year", "fee_tzs": 5900000.0 },
+                { "ref": "(xix)", "description": "Consulting fee, per person per day", "fee_tzs": 45200.0 },
+                { "ref": "(xx)", "description": "Rest house fees, per head per night for non-residents", "fee_usd": 30.0 },
+                { "ref": "(xxi)", "description": "Rest house fees, per head per night for residents", "fee_tzs": 25000.0 },
+                { "ref": "(xxii)", "description": "Seed / fruit collection fees in forest reserves, per kilogram", "fee_tzs": 3000.0 },
+                { "ref": "(xxiii)", "description": "Fees for reserved trees on private farms should be 25% of respective forest royalty", "fee": "25% of respective forest royalty" },
+                { "ref": "(xxiv)", "description": "All naturally grown trees other than reserved trees harvested in areas (farmlands, grazing lands, etc.) converted from general lands shall pay fees as prescribed in Item 1: Logs", "fee": "As prescribed in Part II A, Item 1 (Logs)" },
+                { "ref": "(xxv)", "description": "Office accommodation fees, per square metre per month or its equivalent in shillings", "fee_tzs": 60900.0 },
+                { "ref": "(xxvi)", "description": "Fish processing in the forest reserve, per ha or part of per year", "fee_tzs": 435000.0 },
+                { "ref": "(xxvii)", "description": "To operate mobile sawmill in difficult terrain in the forest reserve (with permission), per allocation per machine", "fee_tzs": 200000.0 },
+                { "ref": "(xxviii)", "description": "Fees for application form (e.g. mining, cultivation, registration, etc.)", "fee_tzs": 5000.0 },
+                { "ref": "(xxix)", "description": "To undertake any other commercial business in a forest reserve (not stated in Schedule 8), per year per square metre", "fee_tzs": 74200.0 }
+              ]
+            },
+            {
+              "item": 2,
+              "name": "Application for harvesting trees in plantations and natural forest",
+              "fees": [
+                { "description": "Companies with or without contracts with the Government", "fee_tzs": 205000.0 },
+                { "description": "Medium harvesters (with sawmills having breakdown, edger and resaw or with efficient technology), 1 - 1,000 m3", "fee_tzs": 180000.0 },
+                { "description": "Medium harvesters, 1,001 - 5,000 m3", "fee_tzs": 187500.0 },
+                { "description": "Medium harvesters, above 5,001 m3", "fee_tzs": 195000.0 }
+              ]
+            },
+            {
+              "item": 3,
+              "name": "Transit pass application fees",
+              "fees": [
+                { "description": "For a 7 ton vehicle or below", "fee_tzs": 7700.0 },
+                { "description": "Above 7 ton vehicle", "fee_tzs": 15400.0 }
+              ]
+            },
+            {
+              "item": 4,
+              "name": "Grading and export certificates fees",
+              "sub_categories": [
+                {
+                  "name": "I. Grading / inspection fees",
+                  "groups": [
+                    {
+                      "group": "(a) For commercial consignments (registered dealer) - consignment whose value exceeds USD 300.00 is considered a commercial consignment",
+                      "fees": [
+                        { "description": "Grading fee for commercial consignments such as timber and other forest products for export, for a consignment not exceeding 20 m3", "fee_tzs": 153400.0 },
+                        { "description": "Fees for inspection of carvings / handcrafts, tanning, gum, Jatropha oil, sandalwood products and other forest products for export, for a consignment not exceeding 20 tons", "fee_tzs": 153400.0 }
+                      ]
+                    },
+                    {
+                      "group": "(b) For non-commercial consignments - consignment whose value is less than or equal to USD 300.00 is considered a non-commercial consignment",
+                      "fees": [
+                        { "description": "Grading fees for timber and other forest products for export as gift, personal effects and sample, per consignment", "fee_tzs": 11100.0 },
+                        { "description": "Fee for inspection of tannin, gum, Jatropha oil, sandalwood products and other forest products for export, per consignment (except Item 14(a))", "fee_tzs": 8700.0 }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "II. Export certificate fees",
+                  "fees": [
+                    { "description": "Export certificate fee for commercial consignment", "fee_tzs": 150500.0 },
+                    { "description": "Export certificate fee for non-commercial consignments, per consignment (except Item 14(a))", "fee_tzs": 11000.0 }
+                  ]
+                },
+                {
+                  "name": "III. Importation charges",
+                  "groups": [
+                    {
+                      "group": "For commercial consignment (registered dealer)",
+                      "fees": [
+                        { "description": "Inspection / handling fee for commercial consignment of 20 m3", "fee_tzs": 115000.0 }
+                      ]
+                    },
+                    {
+                      "group": "For non-commercial consignments",
+                      "fees": [
+                        { "description": "Inspection / handling fee for non-commercial consignments whose value is less than USD 300, per consignment", "fee_tzs": 44200.0 }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "item": 5,
+              "name": "Fees for registration of forest produce dealers and traders, for each site per year",
+              "fees": [
+                { "ref": "a", "description": "Trees", "fee_tzs": 270000.0 },
+                { "ref": "b", "description": "Timber (for pit sawyers in productive natural forest)", "fee_tzs": 256000.0 },
+                { "ref": "c", "description": "Timber yard", "fee_tzs": 256000.0 },
+                { "ref": "d", "description": "Logs", "fee_tzs": 256000.0 },
+                { "ref": "e", "description": "Poles", "fee_tzs": 256000.0 },
+                { "ref": "f", "description": "Withies", "fee_tzs": 64000.0 },
+                { "ref": "g", "description": "Sawmill capacity of up to 5,000 m3 per year", "fee_tzs": 512000.0 },
+                { "ref": "h", "description": "Sawmill capacity of 5,001 - 10,000 m3 per year", "fee_tzs": 1000000.0 },
+                { "ref": "i", "description": "Chipboard mill", "fee_tzs": 1000000.0 },
+                { "ref": "j", "description": "Hardboard mill", "fee_tzs": 1000000.0 },
+                { "ref": "k", "description": "Plywood mill", "fee_tzs": 1000000.0 },
+                { "ref": "l", "description": "Pulp and paper mill", "fee_tzs": 2000000.0 },
+                { "ref": "m", "description": "Match box factory", "fee_tzs": 1000000.0 },
+                { "ref": "n", "description": "Impregnation plant", "fee_tzs": 512000.0 },
+                { "ref": "o(i)", "description": "Briquettes plant: production capacity 0 - 10 ton / day", "fee_tzs": 50000.0 },
+                { "ref": "o(ii)", "description": "Briquettes plant: production capacity 11 - 25 ton / day", "fee_tzs": 100000.0 },
+                { "ref": "o(iii)", "description": "Briquettes plant: production capacity > 25 ton / day", "fee_tzs": 150000.0 },
+                { "ref": "p", "description": "Small curio shops (forestry products)", "fee_tzs": 256000.0 },
+                { "ref": "q", "description": "Micro curio shops (forestry products)", "fee_tzs": 100000.0 },
+                { "ref": "r", "description": "Exporters of forest products", "fee_tzs": 512000.0 },
+                { "ref": "s", "description": "Importers of forest products", "fee_tzs": 512000.0 },
+                { "ref": "t", "description": "Charcoal", "fee_tzs": 256000.0 },
+                { "ref": "u", "description": "Firewood", "fee_tzs": 256000.0 },
+                { "ref": "v", "description": "Furniture mart (small)", "fee_tzs": 256000.0 },
+                { "ref": "w", "description": "Furniture mart (micro)", "fee_tzs": 100000.0 },
+                { "ref": "x", "description": "Wood works factory (small)", "fee_tzs": 384000.0 },
+                { "ref": "y", "description": "Wood works factory (micro)", "fee_tzs": 150000.0 },
+                { "ref": "z", "description": "Carpentry, per bench", "fee_tzs": 50000.0 },
+                { "ref": "zz", "description": "Other forest products / produce dealers", "fee_tzs": 130000.0 }
+              ],
+              "note": "Micro enterprise is a business with less than 5 employees and operating with a turnover of less than TZS 5,000,000.00. Small enterprise is a business with staff between 5 - 49 and operating with a turnover between TZS 5,000,000.00 - TZS 200,000,000.00."
+            },
+            {
+              "item": 6,
+              "name": "Forest road service fees (vehicles not covered under Item 7)",
+              "fees_by_vehicle_capacity": [
+                { "capacity": "Less than 1 ton", "fee_tzs": 1450.0 },
+                { "capacity": "1 - 3 tons", "fee_tzs": 2200.0 },
+                { "capacity": "3 - 5 tons", "fee_tzs": 3000.0 },
+                { "capacity": "5 - 10 tons", "fee_tzs": 5900.0 },
+                { "capacity": "> 10 tons", "fee_tzs": 7400.0 }
+              ]
+            },
+            {
+              "item": 7,
+              "name": "LMDA (Logging Miscellaneous Deposit Account) charges in plantation forest",
+              "description": "The fees are charged to cater for silvicultural activities and road maintenance in forest plantations.",
+              "fees": [
+                { "ref": "(a)", "description": "Silviculture fee per m3 of teak logs", "fee": "5% of the sale value" },
+                { "ref": "(b)", "description": "Road fee per m3 of teak logs", "fee": "5% of the sale value" },
+                { "ref": "(c)", "description": "Silviculture fee per m3 of softwood logs", "fee_tzs": 8900.0 },
+                { "ref": "(d)", "description": "Road fee per m3 of softwood logs", "fee_tzs": 8900.0 },
+                { "ref": "(e)", "description": "Silviculture fee per m3 of eucalyptus logs", "fee_tzs": 8900.0 },
+                { "ref": "(f)", "description": "Road fee per m3 of eucalyptus and other hardwood", "fee_tzs": 8900.0 }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
